@@ -1,0 +1,133 @@
+{
+  "_meta": {
+    "owner": "Hargun (data lead)",
+    "status": "PLACEHOLDER. Replace with the full seed dataset (21 investigations) from Arjun's Claude chat. Keep the field names below, or update TEAM_BRIEF.md if they change.",
+    "si_note": "This dataset was compiled with SI (AI) assistance from public NASA sources and checked by the team. Values left null are unknown, not zero.",
+    "units": {
+      "o2_min": "% oxygen by volume",
+      "o2_max": "% oxygen by volume",
+      "pressure_min": "psi",
+      "pressure_max": "psi",
+      "flow_min": "cm/s",
+      "flow_max": "cm/s"
+    }
+  },
+  "habitats": [
+    {
+      "id": "iss",
+      "name": "ISS / spacecraft cabin",
+      "o2_min": 21,
+      "o2_max": 21,
+      "pressure_psi": 14.7,
+      "notes": "Earth-like cabin air"
+    },
+    {
+      "id": "moon-base",
+      "name": "Moon Base",
+      "o2_min": 30,
+      "o2_max": null,
+      "pressure_psi": 10.2,
+      "notes": "Challenge brief: likely 30% O2 or greater at 10.2 psi or less"
+    },
+    {
+      "id": "rover",
+      "name": "Pressurized rover",
+      "o2_min": 30,
+      "o2_max": null,
+      "pressure_psi": 10.2,
+      "notes": "Challenge brief groups rovers with the Moon Base atmosphere"
+    },
+    {
+      "id": "spacesuit",
+      "name": "Spacesuit",
+      "o2_min": 100,
+      "o2_max": 100,
+      "pressure_psi": 4.3,
+      "notes": "Challenge brief: 100% O2 at 4.3 psi"
+    }
+  ],
+  "investigations": [
+    {
+      "id": "BASS-II",
+      "name": "Burning and Suppression of Solids II",
+      "fuel_state": "solid",
+      "fuel": null,
+      "sample_geometry": null,
+      "o2_min": null,
+      "o2_max": null,
+      "pressure_min": null,
+      "pressure_max": null,
+      "flow_min": null,
+      "flow_max": null,
+      "diluents": [],
+      "hardware": "MSG + SPICE flow duct",
+      "measurements": [],
+      "safety_pillar": "prevention",
+      "relevance": "direct",
+      "key_findings": "TODO (Hargun)",
+      "psi_link": null
+    },
+    {
+      "id": "FLEX",
+      "name": "Flame Extinguishment Experiment",
+      "fuel_state": "liquid droplet",
+      "fuel": null,
+      "sample_geometry": "droplet",
+      "o2_min": null,
+      "o2_max": null,
+      "pressure_min": null,
+      "pressure_max": null,
+      "flow_min": null,
+      "flow_max": null,
+      "diluents": ["CO2", "He"],
+      "hardware": "CIR + MDCA",
+      "measurements": [],
+      "safety_pillar": "suppression",
+      "relevance": "direct",
+      "key_findings": "TODO (Hargun)",
+      "psi_link": null
+    },
+    {
+      "id": "ACME-CFI-G",
+      "name": "ACME Cool Flames Investigation with Gases",
+      "fuel_state": "gas",
+      "fuel": "e.g. propane",
+      "sample_geometry": "spherical burner (inside-out flame)",
+      "o2_min": null,
+      "o2_max": 85,
+      "pressure_min": null,
+      "pressure_max": null,
+      "flow_min": null,
+      "flow_max": null,
+      "diluents": [],
+      "hardware": "CIR + ACME",
+      "measurements": [],
+      "safety_pillar": "prevention",
+      "relevance": "direct",
+      "key_findings": "Highest-oxygen microgravity tests in PSI (up to 85% O2, per challenge brief). TODO (Hargun)",
+      "psi_link": null
+    },
+    {
+      "id": "SAME",
+      "name": "Smoke Aerosol Measurement Experiment",
+      "fuel_state": "solid",
+      "fuel": null,
+      "sample_geometry": null,
+      "o2_min": null,
+      "o2_max": null,
+      "pressure_min": null,
+      "pressure_max": null,
+      "flow_min": null,
+      "flow_max": null,
+      "diluents": [],
+      "hardware": "MSG",
+      "measurements": [],
+      "safety_pillar": "detection",
+      "relevance": "direct",
+      "key_findings": "TODO (Hargun)",
+      "psi_link": null
+    }
+  ],
+  "incidents": [],
+  "spinoffs": []
+}
