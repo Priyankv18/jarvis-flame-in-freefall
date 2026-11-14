@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "hints": "node scripts/psi_hints.mjs"
+    "hints": "node scripts/psi_hints.mjs",
+    "validate": "node scripts/validate_data.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
