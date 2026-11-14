@@ -1,25 +1,8 @@
-# Node
-node_modules/
-dist/
-.vercel/
-npm-debug.log*
-
-# Secrets: NEVER commit API keys
+node_modules
+dist
 .env
-.env.local
-.env.*.local
-
-# Python (data scripts)
-__pycache__/
-*.pyc
-.venv/
-
-# OS / editor
+.env.*
+!.env.example
 .DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# Event material with logins: keep out of the public repo
-*opening-deck*
-*wifi*
+data/psi_raw.json
+data/psi_hints.md

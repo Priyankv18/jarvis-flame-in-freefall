@@ -1,29 +1,25 @@
-# JARVIS: Flame in Freefall
+# Fire Safety Explorer
 
-**Team JARVIS, NASA Space Apps Challenge 2026.** A dashboard that summarizes, ranks and interprets NASA microgravity combustion investigations from the Physical Sciences Informatics (PSI) database, to give fire safety insights for spacecraft, the ISS, a Moon Base and pressurized rovers.
+A dashboard over NASA PSI microgravity combustion investigations, built for the 2026 NASA Space Apps Challenge "Flame in Freefall". It lets you pick a crew habitat (ISS, Moon base, rover, Mars base, spacesuit), then browse, filter and compare investigations and see what the research does and does not cover.
 
-## Features (in progress)
-- **Catalogue**: every investigation with fuel, test conditions, hardware and safety role.
-- **Ranking**: pick a crew environment and see which investigations matter most, with a transparent score breakdown.
-- **Gap map**: tested oxygen and pressure vs where crews will actually live. The empty space is the research gap.
-- **Ask JARVIS**: questions answered only from our dataset, with cited investigation ids.
+## Run
 
-## Run it
-```bash
-npm install
-npm run dev          # app at http://localhost:5173 (no /api)
-npx vercel dev       # app + /api/ask together
 ```
-Copy `.env.example` to `.env.local` and add the LLM key. Never commit it.
+npm install
+npm run dev
+npm run build
+```
 
-## Data sources
-- [NASA PSI Data Repository: Combustion Science](https://psi.nasa.gov/physci/repo/search?q=combustion)
-- [A Researcher's Guide to ISS Combustion Science (2015)](https://www.nasa.gov/missions/station/a-researchers-guide-to-combustion-science/)
-- [NASA Combustion Science](https://www.nasa.gov/glenn/glenn-expertise-space-exploration/physical-sciences-program/combustion-science/)
-- NASA lessons learned: Apollo 1, Apollo 13, Mir fire. NASA Spinoff articles on firefighter gear and smoke detection.
+## Data
 
-## Use of SI (AI)
-This project was built with SI assistance (Claude) for planning, code scaffolding and compiling the seed dataset from public NASA sources. All AI-assisted data was checked by the team; unknown values are left empty rather than estimated. The app itself uses an LLM to answer questions, grounded in and citing our dataset.
+`data/investigations.json` is the team seed file (`meta`, `habitats`, `investigations`, `future`, `incidents`, `spinoffs`). `data/team_investigations.original.json` is the untouched copy. Records with a `psi_id` also carry a `psi_link` and, where PSI text stated them, filled values listed in `psi_filled`.
 
-## Team
-Arjun (AI), Hargun (data), Priyank (scoring and visuals), Pranav (frontend), and our story and submission lead.
+`npm run hints` reads a saved PSI response in `data/psi_raw.json` and writes `data/psi_hints.md`, sentences a person can check before filling values by hand.
+
+## Use of AI (disclosure)
+
+This project used AI assistance (Claude by Anthropic) for code and for drafting data records from public PSI text. All data should be checked against the linked NASA PSI record. AI-generated content is flagged in `meta.ai_note` in the JSON.
+
+## Credits
+
+Data: NASA Physical Sciences Informatics. This project is not endorsed by NASA.
