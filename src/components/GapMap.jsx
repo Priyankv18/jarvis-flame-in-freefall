@@ -22,10 +22,15 @@ const PILLAR_COLORS = {
 const OTHER_COLOR = '#9aa3b8';
 const ZONE_COLOR = '#c39bff';
 const POINT_COLOR = '#eef1f7'; // single-value crew environments (ISS, spacesuit)
-const MOON_IDS = ['moon-base'];
+// Darker text colours so labels stay readable on the light page background.
+const ZONE_TEXT = '#5b21b6';
+const POINT_TEXT = '#0f172a';
+const OTHER_ZONE_TEXT = '#0369a1';
+const MOON_IDS = ['moon-base', 'moon_base'];
 
 const pillarOf = (inv) => {
-  const p = Array.isArray(inv.safety_pillar) ? inv.safety_pillar[0] : inv.safety_pillar;
+  const raw = inv.pillars ?? inv.safety_pillar;
+  const p = Array.isArray(raw) ? raw[0] : raw;
   return String(p ?? '').toLowerCase();
 };
 const colorOf = (inv) => PILLAR_COLORS[pillarOf(inv)] ?? OTHER_COLOR;
@@ -240,7 +245,7 @@ export default function GapMap({ investigations, habitats, habitat }) {
                   stroke={z.isSelected ? '#ff7a1a' : '#0b0d14'}
                   strokeWidth={z.isSelected ? 2 : 1}
                 />
-                <text className="zone-label" x={right ? cx - 12 : cx + 12} y={cy + 4} textAnchor={right ? 'end' : 'start'} style={{ fill: POINT_COLOR }}>
+                <text className="zone-label" x={right ? cx - 12 : cx + 12} y={cy + 4} textAnchor={right ? 'end' : 'start'} style={{ fill: POINT_TEXT }}>
                   {z.label}
                 </text>
               </g>
@@ -249,10 +254,10 @@ export default function GapMap({ investigations, habitats, habitat }) {
           const r = boxRect(z.o2, z.pressure);
           return (
             <g key={`${z.label}-label`}>
-              <text className="zone-label" x={r.x + 8} y={r.y + 18} style={{ fill: z.isMoon ? ZONE_COLOR : '#5cc8ff' }}>
+              <text className="zone-label" x={r.x + 8} y={r.y + 18} style={{ fill: z.isMoon ? ZONE_TEXT : OTHER_ZONE_TEXT }}>
                 {z.label}
               </text>
-              <text x={r.x + 8} y={r.y + 34} style={{ fill: z.isMoon ? ZONE_COLOR : '#5cc8ff', fontSize: 11 }}>
+              <text x={r.x + 8} y={r.y + 34} style={{ fill: z.isMoon ? ZONE_TEXT : OTHER_ZONE_TEXT, fontSize: 11 }}>
                 {z.openO2 ? `≥${z.o2.min}% O2` : `${z.o2.min}–${z.o2.max}% O2`}
                 {', '}
                 {z.openPressureBelow ? `≤${z.pressure.max} psi` : `${z.pressure.min}–${z.pressure.max} psi`}

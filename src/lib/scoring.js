@@ -11,7 +11,7 @@
 // so we accept: x_min/x_max, a single number, [min, max], { min, max }, or "21-35".
 const AXIS_KEYS = {
   o2: ['o2', 'oxygen', 'o2_percent'],
-  pressure: ['pressure', 'pressure_psi'],
+  pressure: ['pressure', 'pressure_psi'], // pressure_atm_* is handled in getRange
   flow: ['flow', 'flow_speed', 'flow_velocity'],
 };
 
@@ -42,7 +42,11 @@ function mkRange(min, max) {
   };
 }
 
-/** Tested range of an investigation on one axis ('o2' | 'pressure' | 'flow'), or null if unknown. */
+const PSI_PER_ATM = 14.7;
+const atmToPsi = (v) => (num(v) == null ? null : Math.round(v * PSI_PER_ATM * 10) / 10);
+
+/** Tested range of an investigation on one axis ('o2' | 'pressure' | 'flow'), or null if unknown.
+ *  Pressure is always returned in psi. The final dataset stores it in atm (pressure_atm_min/max). */
 export function getRange(inv, axis) {
   for (const key of AXIS_KEYS[axis]) {
     const r = mkRange(num(inv?.[`${key}_min`]), num(inv?.[`${key}_max`]));
@@ -50,27 +54,48 @@ export function getRange(inv, axis) {
     const single = parseValue(inv?.[key]);
     if (single) return single;
   }
+  if (axis === 'pressure') {
+    const r = mkRange(atmToPsi(inv?.pressure_atm_min), atmToPsi(inv?.pressure_atm_max));
+    if (r) return r;
+  }
   return null;
 }
 
 /**
- * Operating zone of a crew environment.
- * The brief gives the Moon Base / rover atmosphere as "30% O2 or more at 10.2 psi or less",
- * which the data encodes as o2_max = null. So: o2_max null means "or more" (open to 100%),
- * and in that case pressure_psi is read as a ceiling ("or less"). Explicit
- * pressure_min / pressure_max on a habitat always win.
+ * Operating zone of a crew environment, in % O2 and psi.
+ * Habitats come in two shapes in the final dataset:
+ *   single values: { o2: 21, pressure_atm: 1.0 }          (ISS, spacesuit)
+ *   open ranges:   { o2_min: 30, pressure_atm_max: 0.69 } (Moon Base, rover, Mars)
+ * The brief gives the Moon Base as "30% O2 or more at 10.2 psi or less", so a missing
+ * o2_max means "or more" (open to 100%) and the pressure is a ceiling ("or less").
+ * pressure_psi, when present, wins over the atm conversion so labels match the brief exactly.
  */
 export function habitatZone(h) {
-  if (!h || h.o2_min == null) return null;
-  const openO2 = h.o2_max == null;
-  const p = num(h.pressure_psi);
-  const pMin = num(h.pressure_min) ?? (openO2 ? 0 : p);
-  const pMax = num(h.pressure_max) ?? p;
+  if (!h) return null;
+  const o2Single = num(h.o2);
+  const o2Min = num(h.o2_min) ?? o2Single;
+  if (o2Min == null) return null;
+  const o2Max = num(h.o2_max) ?? o2Single;
+  const openO2 = o2Max == null;
+
+  const psi = num(h.pressure_psi) ?? atmToPsi(h.pressure_atm);
+  const ceiling = num(h.pressure_psi) ?? atmToPsi(h.pressure_atm_max);
+  let pressure = null;
+  let openPressureBelow = false;
+  if (num(h.pressure_min) != null || num(h.pressure_max) != null) {
+    pressure = mkRange(num(h.pressure_min), num(h.pressure_max));
+  } else if (h.pressure_atm_max != null || (openO2 && psi != null)) {
+    pressure = ceiling == null ? null : { min: 0, max: ceiling };
+    openPressureBelow = pressure != null;
+  } else if (psi != null) {
+    pressure = { min: psi, max: psi };
+  }
+
   return {
-    o2: { min: h.o2_min, max: h.o2_max ?? 100 },
-    pressure: pMax == null ? null : { min: pMin ?? pMax, max: pMax },
+    o2: { min: o2Min, max: o2Max ?? 100 },
+    pressure,
     openO2,
-    openPressureBelow: openO2 && h.pressure_min == null,
+    openPressureBelow,
   };
 }
 
@@ -87,7 +112,7 @@ export const FACTORS = [
   { key: 'pillar', label: 'Safety pillar', color: '#8fd694',
     help: 'Studies tied to prevention, detection or suppression score full marks.' },
   { key: 'relevance', label: 'Direct relevance', color: '#c39bff',
-    help: '"Direct" fire safety studies beat "indirect" fundamental combustion studies.' },
+    help: 'Direct fire safety studies score 1, secondary 0.7, indirect fundamental combustion studies 0.4.' },
 ];
 
 // Slider units (0-10). Shares are weight / sum of weights.
@@ -103,21 +128,26 @@ function overlapScore(tested, target, falloff) {
 function fuelScore(inv) {
   const s = String(inv.fuel_state ?? '').toLowerCase();
   if (!s) return null;
-  if (s.includes('solid')) return 1;
-  if (s.includes('liquid') || s.includes('droplet')) return 0.6;
-  if (s.includes('gas')) return 0.5;
+  // Judge by the leading word: "gas (emulating solids)" is a gas, not a solid.
+  if (s.startsWith('solid')) return 1;
+  if (s.startsWith('liquid') || s.startsWith('droplet')) return 0.6;
+  if (s.startsWith('gas')) return 0.5;
   return 0.3;
 }
 
 function pillarScore(inv) {
-  const p = Array.isArray(inv.safety_pillar) ? inv.safety_pillar.join(' ') : inv.safety_pillar;
+  const raw = inv.pillars ?? inv.safety_pillar;
+  const p = Array.isArray(raw) ? raw.join(' ') : raw;
   if (!p) return null;
   return /prevent|detect|suppress/i.test(p) ? 1 : 0.5;
 }
 
 function relevanceScore(inv) {
   if (!inv.relevance) return null;
-  return /direct/i.test(inv.relevance) && !/indirect/i.test(inv.relevance) ? 1 : 0.4;
+  const r = String(inv.relevance).toLowerCase();
+  if (r === 'direct') return 1;
+  if (r === 'secondary') return 0.7;
+  return 0.4;
 }
 
 export function factorParts(inv, habitat) {
@@ -176,8 +206,9 @@ export function explainScore(result, habitat) {
   else if (parts.pressure != null) bits.push('pressure differs');
   if (parts.fuel === 1) bits.push('solid fuel (cabin materials)');
   if (parts.relevance === 1) bits.push('direct fire safety study');
+  else if (parts.relevance === 0.7) bits.push('secondary fire safety relevance');
   else if (parts.relevance != null) bits.push('indirect (fundamental) study');
-  const pillar = result.inv?.safety_pillar;
+  const pillar = result.inv?.pillars ?? result.inv?.safety_pillar;
   if (parts.pillar === 1 && pillar) bits.push(`${Array.isArray(pillar) ? pillar.join('/') : pillar} pillar`);
   let text = bits.length ? bits.join('; ') : 'little known data';
   text = text.charAt(0).toUpperCase() + text.slice(1);
