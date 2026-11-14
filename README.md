@@ -1,52 +1,60 @@
-Fire Safety Explorer
+# Fire Safety Explorer
 
 A dashboard over NASA PSI microgravity combustion investigations, built for the 2026 NASA Space Apps Challenge "Flame in Freefall". It lets you pick a crew habitat (ISS, Moon base, rover, Mars base, spacesuit), then browse, filter and compare investigations and see what the research does and does not cover.
 
-Live demo
+## Live demo
 
-https://jarvis-flame-in-freefall.vercel.app
+**https://jarvis-flame-in-freefall.vercel.app**
 
 No sign-in needed. To try it:
 
-Pick a crew habitat at the top, for example Moon base. Every tab updates for that habitat.
-Explore shows how many investigations tested conditions that reach the habitat, plus past spacecraft fire incidents.
-Gap map plots the oxygen and pressure each investigation actually tested against where crews will live. Empty space inside a habitat zone is a research gap.
-Rank scores every investigation for the habitat. Move the sliders to change the weights and see the breakdown.
-Ask answers questions from our dataset only. Click an example question, then click a source chip to see the investigation behind each claim.
-Run
+1. Pick a crew habitat at the top, for example **Moon base**. Every tab updates for that habitat.
+2. **Explore** shows how many investigations tested conditions that reach the habitat, plus past spacecraft fire incidents.
+3. **Gap map** plots the oxygen and pressure each investigation actually tested against where crews will live. Empty space inside a habitat zone is a research gap.
+4. **Rank** scores every investigation for the habitat. Move the sliders to change the weights and see the breakdown.
+5. **Ask** answers questions from our dataset only. Click an example question, then click a source chip to see the investigation behind each claim.
+
+## Run
+
+```
 npm install
 npm run dev
+```
 
-npm run build makes the production build in dist/.
+`npm run build` makes the production build in `dist/`.
 
-The Ask tab calls a serverless function in api/ask.js, which only runs on a Vercel deploy (or locally with npx vercel dev). Under plain npm run dev every other tab works but Ask returns an error. The function reads its API key from the LLM_API_KEY environment variable set in Vercel; the key is never committed.
+The Ask tab calls a serverless function in `api/ask.js`, which only runs on a Vercel deploy (or locally with `npx vercel dev`). Under plain `npm run dev` every other tab works but Ask returns an error. The function reads its API key from the `LLM_API_KEY` environment variable set in Vercel; the key is never committed.
 
-Deploy
+## Deploy
 
-The repo is connected to Vercel. Every merge to main redeploys the live site automatically, and every pull request gets its own preview link.
+The repo is connected to Vercel. Every merge to `main` redeploys the live site automatically, and every pull request gets its own preview link.
 
 Environment variables (Vercel: Project Settings > Environment Variables). After changing one, redeploy for it to take effect.
 
-Variable	Required	What it does
-LLM_API_KEY	Yes, for live AI answers	API key for the language model. Without it, Ask shows the matching records instead (offline mode).
-LLM_PROVIDER	No	gemini (default), anthropic or openai.
-LLM_MODEL	No	Overrides the default model name for that provider, e.g. if a model is retired.
-Tabs
-Explore: how many studies tested ranges that include the chosen habitat's oxygen and pressure, plus past incidents.
-Catalogue: search, filter and compare investigations. A "PSI" tag marks records with values filled from the PSI record.
-Gap map: tested oxygen and pressure ranges drawn against habitat zones.
-Rank: weighted relevance score per investigation for the chosen habitat.
-Ask: type a question and get an answer built from the project data. The app picks the most relevant investigation records and sends only those to a language model, which writes the answer. Every citation is checked on the server against the records that were sent, and any that do not match are removed and flagged. Answers are AI generated and may be wrong; check them against the cited records.
-Data
+| Variable | Required | What it does |
+|---|---|---|
+| `LLM_API_KEY` | Yes, for live AI answers | API key for the language model. Without it, Ask shows the matching records instead (offline mode). |
+| `LLM_PROVIDER` | No | `gemini` (default), `anthropic` or `openai`. |
+| `LLM_MODEL` | No | Overrides the default model name for that provider, e.g. if a model is retired. |
 
-data/investigations.json is the team seed file (meta, habitats, investigations, future, incidents, spinoffs). data/team_investigations.original.json is the untouched copy. Records with a psi_id also carry a psi_link and, where PSI text stated them, filled values listed in psi_filled.
+## Tabs
 
-npm run hints reads a saved PSI response in data/psi_raw.json and writes data/psi_hints.md, sentences a person can check before filling values by hand.
+- **Explore**: how many studies tested ranges that include the chosen habitat's oxygen and pressure, plus past incidents.
+- **Catalogue**: search, filter and compare investigations. A "PSI" tag marks records with values filled from the PSI record.
+- **Gap map**: tested oxygen and pressure ranges drawn against habitat zones.
+- **Rank**: weighted relevance score per investigation for the chosen habitat.
+- **Ask**: type a question and get an answer built from the project data. The app picks the most relevant investigation records and sends only those to a language model, which writes the answer. Every citation is checked on the server against the records that were sent, and any that do not match are removed and flagged. Answers are AI generated and may be wrong; check them against the cited records.
 
-Use of AI (disclosure)
+## Data
 
-This project used AI assistance (Claude by Anthropic) for code and for drafting data records from public PSI text. In data/investigations.json, meta.generation_note describes how the seed data was compiled with AI help, and meta.merge_note describes the AI-assisted merge that added PSI ids and filled values. All data should be checked against the linked NASA PSI record. Answers in the Ask tab are generated by a language model from the project data.
+`data/investigations.json` is the team seed file (`meta`, `habitats`, `investigations`, `future`, `incidents`, `spinoffs`). `data/team_investigations.original.json` is the untouched copy. Records with a `psi_id` also carry a `psi_link` and, where PSI text stated them, filled values listed in `psi_filled`.
 
-Credits
+`npm run hints` reads a saved PSI response in `data/psi_raw.json` and writes `data/psi_hints.md`, sentences a person can check before filling values by hand.
+
+## Use of AI (disclosure)
+
+This project used AI assistance (Claude by Anthropic) for code and for drafting data records from public PSI text. In `data/investigations.json`, `meta.generation_note` describes how the seed data was compiled with AI help, and `meta.merge_note` describes the AI-assisted merge that added PSI ids and filled values. All data should be checked against the linked NASA PSI record. Answers in the Ask tab are generated by a language model from the project data.
+
+## Credits
 
 Data: NASA Physical Sciences Informatics. This project is not endorsed by NASA.
