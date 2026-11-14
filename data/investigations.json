@@ -31,6 +31,7 @@
       "name": "ISS / spacecraft cabin",
       "o2": 21,
       "pressure_atm": 1.0,
+      "pressure_psi": 14.7,
       "gravity": "micro",
       "airflow": "forced ventilation",
       "note": "Earth-like cabin air."
@@ -40,6 +41,7 @@
       "name": "Moon base",
       "o2_min": 30,
       "pressure_atm_max": 0.69,
+      "pressure_psi": 10.2,
       "gravity": "lunar (1/6 g)",
       "airflow": "low, partly buoyant",
       "note": "Brief: likely 30% O2 or more at 10.2 psi or less, over 40% more oxygen than Earth air, so materials are much more flammable."
@@ -49,6 +51,7 @@
       "name": "Pressurised rover",
       "o2_min": 30,
       "pressure_atm_max": 0.69,
+      "pressure_psi": 10.2,
       "gravity": "lunar (1/6 g)",
       "airflow": "forced ventilation, small volume",
       "note": "Brief groups rovers with the Moon base atmosphere."
@@ -58,6 +61,7 @@
       "name": "Mars base",
       "o2_min": 30,
       "pressure_atm_max": 0.69,
+      "pressure_psi": 10.2,
       "gravity": "martian (0.38 g)",
       "airflow": "low, partly buoyant",
       "note": "ASSUMPTION: no Mars atmosphere is given in our sources; we assume a Moon-base-like atmosphere. State this in the pitch."
@@ -67,6 +71,7 @@
       "name": "Spacesuit",
       "o2": 100,
       "pressure_atm": 0.29,
+      "pressure_psi": 4.3,
       "gravity": "any",
       "airflow": "suit loop",
       "note": "Brief: 100% O2 at 4.3 psi."
