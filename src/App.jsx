@@ -4,11 +4,12 @@ import Catalogue from './components/Catalogue.jsx'
 import GapMap from './components/GapMap.jsx'
 import ScoreTable from './components/ScoreTable.jsx'
 import AskPanel from './components/AskPanel.jsx'
+import FlameSimulator from './components/FlameSimulator.jsx'
 import MiniGapMap from './components/MiniGapMap.jsx'
 import { coversO2, coversPressure, habitatText } from './lib/format.js'
 import { habitatCoverage } from './lib/scoring.js'
 
-const TABS = ['Explore', 'Catalogue', 'Gap map', 'Rank', 'Ask']
+const TABS = ['Explore', 'Catalogue', 'Gap map', 'Rank', 'Simulator', 'Ask']
 
 // Short "O2 / pressure" readout for a habitat card, from the habitat's own fields.
 function habitatReadout(h) {
@@ -241,6 +242,7 @@ export default function App() {
         {tab === 'Catalogue' && <Catalogue {...props} />}
         {tab === 'Gap map' && <GapMap {...props} />}
         {tab === 'Rank' && <ScoreTable {...props} />}
+        {tab === 'Simulator' && <FlameSimulator {...props} />}
         {tab === 'Ask' && <AskPanel {...props} />}
       </main>
 
