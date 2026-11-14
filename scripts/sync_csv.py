@@ -55,9 +55,11 @@ def to_json():
             for col, cell in row.items():
                 cell = (cell or "").strip()
                 if cell == "":
-                    # keep explicit nulls that already existed; skip keys that never existed
-                    if col in old.get(ident, {}):
-                        rec[col] = [] if col in LISTS else None
+                    if col in LISTS:
+                        rec[col] = []          # list fields are always arrays, even when empty
+                    elif col in old.get(ident, {}):
+                        rec[col] = None        # keep explicit nulls that already existed
+                    # keys that never existed stay absent
                     continue
                 if col in LISTS:
                     rec[col] = cell.split(SEP)
