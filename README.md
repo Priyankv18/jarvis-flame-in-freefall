@@ -2,6 +2,18 @@
 
 A dashboard over NASA PSI microgravity combustion investigations, built for the 2026 NASA Space Apps Challenge "Flame in Freefall". It lets you pick a crew habitat (ISS, Moon base, rover, Mars base, spacesuit), then browse, filter and compare investigations and see what the research does and does not cover.
 
+## Live demo
+
+**https://jarvis-flame-in-freefall.vercel.app**
+
+No sign-in needed. To try it:
+
+1. Pick a crew habitat at the top, for example **Moon base**. Every tab updates for that habitat.
+2. **Explore** shows how many investigations tested conditions that reach the habitat, plus past spacecraft fire incidents.
+3. **Gap map** plots the oxygen and pressure each investigation actually tested against where crews will live. Empty space inside a habitat zone is a research gap.
+4. **Rank** scores every investigation for the habitat. Move the sliders to change the weights and see the breakdown.
+5. **Ask** answers questions from our dataset only. Click an example question, then click a source chip to see the investigation behind each claim.
+
 ## Run
 
 ```
@@ -13,13 +25,25 @@ npm run dev
 
 The Ask tab calls a serverless function in `api/ask.js`, which only runs on a Vercel deploy (or locally with `npx vercel dev`). Under plain `npm run dev` every other tab works but Ask returns an error. The function reads its API key from the `LLM_API_KEY` environment variable set in Vercel; the key is never committed.
 
+## Deploy
+
+The repo is connected to Vercel. Every merge to `main` redeploys the live site automatically, and every pull request gets its own preview link.
+
+Environment variables (Vercel: Project Settings > Environment Variables). After changing one, redeploy for it to take effect.
+
+| Variable | Required | What it does |
+|---|---|---|
+| `LLM_API_KEY` | Yes, for live AI answers | API key for the language model. Without it, Ask shows the matching records instead (offline mode). |
+| `LLM_PROVIDER` | No | `gemini` (default), `anthropic` or `openai`. |
+| `LLM_MODEL` | No | Overrides the default model name for that provider, e.g. if a model is retired. |
+
 ## Tabs
 
 - **Explore**: how many studies tested ranges that include the chosen habitat's oxygen and pressure, plus past incidents.
 - **Catalogue**: search, filter and compare investigations. A "PSI" tag marks records with values filled from the PSI record.
 - **Gap map**: tested oxygen and pressure ranges drawn against habitat zones.
 - **Rank**: weighted relevance score per investigation for the chosen habitat.
-- **Ask**: type a question and get an answer built from the project data. The app picks the most relevant investigation records and sends only those to a language model, which writes the answer. Answers are AI generated and may be wrong; check them against the cited records.
+- **Ask**: type a question and get an answer built from the project data. The app picks the most relevant investigation records and sends only those to a language model, which writes the answer. Every citation is checked on the server against the records that were sent, and any that do not match are removed and flagged. Answers are AI generated and may be wrong; check them against the cited records.
 
 ## Data
 

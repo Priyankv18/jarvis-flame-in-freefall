@@ -23,7 +23,8 @@
       "spice_sheet": "https://www.nasa.gov/wp-content/uploads/2025/07/smoke-point-in-co-flow-experiment-spice.pdf",
       "slice_sheet": "https://www.nasa.gov/wp-content/uploads/2025/07/structure-liftoff-in-combustion-experiment-slice.pdf"
     },
-    "merge_note": "v0.2 merge (Pranav): psi_id/psi_link added for 11 records; blanks filled from PSI text where stated (see psi_filled per record). AI-assisted."
+    "merge_note": "v0.2 merge (Pranav): psi_id/psi_link added for 11 records; blanks filled from PSI text where stated (see psi_filled per record). AI-assisted.",
+    "merge_note_2": "v0.3 merge (15 Nov): added values Hargun sourced from PSI tables, the 2015 Researcher's Guide and Urban et al. (ICES-2021-266, ICES-2024-365) for fields that were blank; listed per record in hargun_filled with sources in o2_note/flow_note. Existing values, PSI links and habitat fields kept. FLEX-2 confirmed against PSI-68. AI-assisted."
   },
   "habitats": [
     {
@@ -93,10 +94,10 @@
         "paraffin and Japan wax candles"
       ],
       "geometry": "Thin flat 12 x 1-2 cm; thick flat 5 x 1 cm x 1-2 mm; PMMA spheres 1-2 cm; candles 6 x 25 mm",
-      "o2_min": null,
-      "o2_max": null,
-      "pressure_atm_min": null,
-      "pressure_atm_max": null,
+      "o2_min": 17,
+      "o2_max": 21,
+      "pressure_atm_min": 1,
+      "pressure_atm_max": 1,
       "flow_min": 5,
       "flow_max": 50,
       "diluents": [
@@ -120,7 +121,15 @@
         "Best place to apply suppressant is harder to find in microgravity; badly placed suppressant can feed the flame by pulling in oxygen."
       ],
       "people": "PI Paul Ferkul (NCSER); Sandra Olson (NASA GRC)",
-      "source": "bass_sheet"
+      "source": "bass_sheet",
+      "hargun_filled": [
+        "o2_min",
+        "o2_max",
+        "pressure_atm_min",
+        "pressure_atm_max"
+      ],
+      "o2_note": "Researcher's Guide to ISS Combustion Science (NASA, Oct 2015), BASS section: MSG air is nominally 21% O2 at one atmosphere, and nitrogen dilution was used to reach as low as 17% O2. Pressure also from NTRS 20150008962 (BASS and BASS-II fabric paper).",
+      "flow_note": "Kept 5-50 cm/s (matches the spaceflight101 BASS-II description). Sources differ: PSI-26 says airflow up to 40 cm/s, and a NASA BASS-II presentation (NTRS 20160000593) lists 0-55 cm/s as the main variable range. Recheck against the bass_sheet wording."
     },
     {
       "id": "BASS-II",
@@ -135,11 +144,11 @@
         "acrylic sphere section"
       ],
       "geometry": "Thin flat 10 x 1-2 cm; rods; large sphere section",
-      "o2_min": null,
-      "o2_max": null,
-      "o2_note": "Ambient O2 was varied (lowered with N2 vitiation) but the range is not stated in our source.",
-      "pressure_atm_min": null,
-      "pressure_atm_max": null,
+      "o2_min": 13.6,
+      "o2_max": 22.2,
+      "o2_note": "PSI-25 BASS-II table, Calibrated initial O2 column: 13.6 to 22.2% across the tests (read from a screenshot, so allow +/-0.1). NASA papers (NTRS 20150008962, 20160000593) quote 16-21% for the fabric tests. Pressure 1 atm from NTRS 20150008962 (PSI-25 has no pressure column).",
+      "pressure_atm_min": 1,
+      "pressure_atm_max": 1,
       "flow_min": 5,
       "flow_max": 50,
       "diluents": [
@@ -164,7 +173,14 @@
         "Data supports theoretical quenching boundaries."
       ],
       "people": "PI Sandra Olson (NASA GRC)",
-      "source": "bass_sheet"
+      "source": "bass_sheet",
+      "hargun_filled": [
+        "o2_min",
+        "o2_max",
+        "pressure_atm_min",
+        "pressure_atm_max"
+      ],
+      "flow_note": "Kept 5-50 cm/s from the BASS fact sheet. Sources differ: PSI-25 description says up to 40 cm/s, the PSI-25 'Air display' column reads 0 to 49 (units not labelled) and NASA presentation NTRS 20160000593 lists 0-55 cm/s."
     },
     {
       "id": "BASS-M",
@@ -211,12 +227,12 @@
         "SIBAL cotton-fiberglass"
       ],
       "geometry": "0.4 m x 1 m sheet",
-      "o2_min": null,
-      "o2_max": null,
-      "pressure_atm_min": null,
-      "pressure_atm_max": null,
-      "flow_min": null,
-      "flow_max": null,
+      "o2_min": 21.5,
+      "o2_max": 21.7,
+      "pressure_atm_min": 0.99,
+      "pressure_atm_max": 0.99,
+      "flow_min": 20,
+      "flow_max": 20,
       "diluents": [],
       "measurements": [
         "cameras"
@@ -231,7 +247,17 @@
         "First large-scale fire in space; the previous largest space fire test was about index-card sized."
       ],
       "people": null,
-      "source": "saffire_sheet"
+      "source": "saffire_sheet",
+      "hargun_filled": [
+        "o2_min",
+        "o2_max",
+        "pressure_atm_min",
+        "pressure_atm_max",
+        "flow_min",
+        "flow_max"
+      ],
+      "o2_note": "PSI Saffire-I sample table: S1 21.5-21.7% O2, S2 ~21.5% O2. Pressure 100 kPa (0.99 atm) from Urban et al., ICES-2021-266, Table 2 (not in the PSI table).",
+      "flow_note": "PSI Saffire-I sample table: 20 cm/s for both samples (S1 concurrent, S2 opposed)."
     },
     {
       "id": "SAFFIRE-II",
@@ -245,12 +271,12 @@
         "acrylic (spacecraft window material)"
       ],
       "geometry": "9 samples",
-      "o2_min": null,
-      "o2_max": null,
-      "pressure_atm_min": null,
-      "pressure_atm_max": null,
-      "flow_min": null,
-      "flow_max": null,
+      "o2_min": 21.5,
+      "o2_max": 22.1,
+      "pressure_atm_min": 0.99,
+      "pressure_atm_max": 0.99,
+      "flow_min": 20,
+      "flow_max": 25,
       "diluents": [],
       "measurements": [
         "cameras"
@@ -267,7 +293,17 @@
       "people": null,
       "source": "saffire_sheet",
       "psi_id": "PSI-99",
-      "psi_link": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99"
+      "psi_link": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99",
+      "hargun_filled": [
+        "o2_min",
+        "o2_max",
+        "pressure_atm_min",
+        "pressure_atm_max",
+        "flow_min",
+        "flow_max"
+      ],
+      "o2_note": "PSI-99 experimental table, all 9 burn samples (2-1 to 2-9): ~21.5 to 22.1% O2, 20 cm/s air flow (checked 15 Nov). Pressure 100 kPa (0.99 atm) from Urban et al., ICES-2021-266, Table 2 (not in the PSI table).",
+      "flow_note": "PSI-99 table: 20 cm/s for all 9 samples; PSI description says 20 or 30 cm/s depending on material. Upper value 25 cm/s from Urban et al., ICES-2021-266, Table 2 (sample II-6)."
     },
     {
       "id": "SAFFIRE-III",
@@ -279,13 +315,13 @@
         "SIBAL cotton-fiberglass"
       ],
       "geometry": "Large sheet, as Saffire-I",
-      "o2_min": null,
-      "o2_max": null,
-      "pressure_atm_min": null,
-      "pressure_atm_max": null,
-      "flow_min": null,
-      "flow_max": null,
-      "flow_note": "Higher flow velocity than Saffire-I; value not stated.",
+      "o2_min": 21,
+      "o2_max": 21,
+      "pressure_atm_min": 0.99,
+      "pressure_atm_max": 0.99,
+      "flow_min": 25,
+      "flow_max": 30,
+      "flow_note": "Higher flow velocity than Saffire-I. PSI Saffire-III table: 30 cm/s for both samples (S1 concurrent, S2 opposed). ICES-2021-266 Table 2 lists 25 cm/s for III-1. The two sources disagree, so both are kept as the range.",
       "diluents": [],
       "measurements": [
         "cameras"
@@ -300,7 +336,16 @@
         "Repeated Saffire-I material at a higher airflow to see how ventilation changes large-scale fire growth."
       ],
       "people": null,
-      "source": "saffire_sheet"
+      "source": "saffire_sheet",
+      "hargun_filled": [
+        "o2_min",
+        "o2_max",
+        "pressure_atm_min",
+        "pressure_atm_max",
+        "flow_min",
+        "flow_max"
+      ],
+      "o2_note": "O2 and pressure not in the PSI Saffire-III table. 21% O2 and 100 kPa (0.99 atm) from Urban et al., ICES-2021-266, Table 2 (sample III-1)."
     },
     {
       "id": "SAFFIRE-IV-VI",
@@ -313,13 +358,13 @@
         "Saffire-II materials"
       ],
       "geometry": null,
-      "o2_min": null,
-      "o2_max": null,
-      "pressure_atm_min": null,
-      "pressure_atm_max": null,
-      "o2_note": "Varied pressure and O2 toward exploration-vehicle atmospheres; values not stated. Not named in the challenge brief, check PSI for data.",
-      "flow_min": null,
-      "flow_max": null,
+      "o2_min": 22,
+      "o2_max": 31,
+      "pressure_atm_min": 0.53,
+      "pressure_atm_max": 0.99,
+      "o2_note": "Varied pressure and O2 toward exploration-vehicle atmospheres; values not stated. Not named in the challenge brief, check PSI for data. Values from Urban et al.: ICES-2021-266 Table 1 (Saffire IV 22.0% O2 and 100 kPa, Saffire V 25.4-26.2% O2 and 70.7-72.6 kPa) and ICES-2024-365 Table 1 (Saffire VI 28.8-31.0% O2 and 54.1-55.2 kPa). Pressure converted to atm (54.1 kPa = 0.53). Saffire VI covers only the three tests reported in that paper.",
+      "flow_min": 5,
+      "flow_max": 20,
       "diluents": [],
       "measurements": [
         "cameras",
@@ -337,7 +382,16 @@
         "V and VI target exploration spacecraft pressure and O2 ranges."
       ],
       "people": null,
-      "source": "saffire_sheet"
+      "source": "saffire_sheet",
+      "hargun_filled": [
+        "o2_min",
+        "o2_max",
+        "pressure_atm_min",
+        "pressure_atm_max",
+        "flow_min",
+        "flow_max"
+      ],
+      "flow_note": "Same two papers: 20 cm/s, reduced to 5 cm/s in some tests (IV-2, V-3, V-4, VI-3)."
     },
     {
       "id": "SAME",
@@ -539,7 +593,8 @@
         "o2_max",
         "pressure_atm_min",
         "pressure_atm_max"
-      ]
+      ],
+      "psi_note": "PSI-68 approach: chamber varied 0.5 to 3.0 atm and O2 0.1 to 0.4 mole fraction. The Researcher's Guide figure (30% O2 at 2.4 atm) is one test inside that range."
     },
     {
       "id": "CFI",
@@ -840,8 +895,8 @@
       "geometry": "Small gas jets (lighter-sized), several nozzle diameters",
       "o2_min": 21,
       "o2_max": 21,
-      "pressure_atm_min": null,
-      "pressure_atm_max": null,
+      "pressure_atm_min": 1,
+      "pressure_atm_max": 1,
       "flow_min": null,
       "flow_max": null,
       "diluents": [],
@@ -863,7 +918,12 @@
         "Could support performance-based material selection."
       ],
       "people": "PI David Urban (NASA GRC); Peter Sunderland (UMD)",
-      "source": "spice_sheet"
+      "source": "spice_sheet",
+      "hargun_filled": [
+        "pressure_atm_min",
+        "pressure_atm_max"
+      ],
+      "o2_note": "Researcher's Guide to ISS Combustion Science (NASA, Oct 2015): the Microgravity Science Glovebox normally runs ISS air, nominally 21% O2 at one atmosphere. Pressure is that facility-level value, not stated for this experiment alone."
     },
     {
       "id": "SLICE",
@@ -879,8 +939,8 @@
       "geometry": "SPICE nozzles",
       "o2_min": 21,
       "o2_max": 21,
-      "pressure_atm_min": null,
-      "pressure_atm_max": null,
+      "pressure_atm_min": 1,
+      "pressure_atm_max": 1,
       "flow_min": null,
       "flow_max": null,
       "diluents": [
@@ -900,7 +960,12 @@
         "Flame attachment and liftoff limits as air speed rises; precursor to ACME CLD."
       ],
       "people": "PI Marshall Long (Yale)",
-      "source": "slice_sheet"
+      "source": "slice_sheet",
+      "hargun_filled": [
+        "pressure_atm_min",
+        "pressure_atm_max"
+      ],
+      "o2_note": "Researcher's Guide to ISS Combustion Science (NASA, Oct 2015): the Microgravity Science Glovebox normally runs ISS air, nominally 21% O2 at one atmosphere. Pressure is that facility-level value, not stated for this experiment alone."
     }
   ],
   "future": [
