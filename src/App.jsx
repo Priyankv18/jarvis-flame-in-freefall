@@ -20,7 +20,7 @@ export default function App() {
   const ruledOut = investigations.filter((i) => coversO2(i, habitat) === false).length
   const unknown = investigations.length - covered - ruledOut
 
-  const props = { investigations, habitat, meta: data.meta }
+  const props = { investigations, habitats: data.habitats, habitat, meta: data.meta }
 
   return (
     <div className="mx-auto max-w-6xl p-4">
