@@ -99,6 +99,20 @@ export function habitatZone(h) {
   };
 }
 
+/**
+ * Coverage of one habitat by the dataset, using only investigations whose oxygen AND
+ * pressure ranges are both known. `reached` = known tests whose box overlaps the habitat zone.
+ */
+export function habitatCoverage(investigations, habitat) {
+  const zone = habitatZone(habitat);
+  const known = investigations.filter((inv) => getRange(inv, 'o2') && getRange(inv, 'pressure'));
+  const hits = (a, b) => a && b && a.min <= b.max && b.min <= a.max;
+  const reached = zone?.pressure
+    ? known.filter((inv) => hits(getRange(inv, 'o2'), zone.o2) && hits(getRange(inv, 'pressure'), zone.pressure))
+    : [];
+  return { zone, known, reached, total: investigations.length };
+}
+
 // ---------------------------------------------------------------------------
 // Factors (each returns a number 0..1, or null when the data is unknown)
 // ---------------------------------------------------------------------------

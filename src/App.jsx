@@ -4,7 +4,9 @@ import Catalogue from './components/Catalogue.jsx'
 import GapMap from './components/GapMap.jsx'
 import ScoreTable from './components/ScoreTable.jsx'
 import AskPanel from './components/AskPanel.jsx'
+import MiniGapMap from './components/MiniGapMap.jsx'
 import { coversO2, coversPressure, habitatText } from './lib/format.js'
+import { habitatCoverage } from './lib/scoring.js'
 
 const TABS = ['Explore', 'Catalogue', 'Gap map', 'Rank', 'Ask']
 
@@ -89,6 +91,7 @@ export default function App() {
   }
   const o2Counts = countBy(coversO2)
   const pressureCounts = countBy(coversPressure)
+  const coverage = habitatCoverage(investigations, habitat)
 
   const props = { investigations, habitats, habitat, meta: data.meta }
 
@@ -159,6 +162,32 @@ export default function App() {
       <main>
         {tab === 'Explore' && (
           <div className="space-y-4">
+            <section className="jv-hero" aria-label="Mission briefing">
+              <div className="jv-hero-text">
+                <span className="jv-label">Mission briefing · {habitat?.name}</span>
+                <p className="jv-hero-num">
+                  <span className={coverage.reached.length === 0 ? 'zero' : ''}>{coverage.reached.length}</span>
+                  <span className="of"> / {coverage.total}</span>
+                </p>
+                <p className="jv-hero-lead">
+                  {coverage.reached.length === 0
+                    ? <>No investigation in our data tested oxygen and pressure that reach <b>{habitat?.name}</b> conditions ({habitatReadout(habitat)}).</>
+                    : <>investigations tested oxygen and pressure that reach <b>{habitat?.name}</b> conditions ({habitatReadout(habitat)}){': '}
+                        {coverage.reached.map((i) => i.id).join(', ')}.</>}
+                </p>
+                <p className="jv-hero-sub">
+                  {coverage.total - coverage.known.length} of {coverage.total} have no full oxygen and pressure record.
+                  There is no partial-gravity data in PSI yet.
+                </p>
+                <button type="button" className="jv-hero-btn" onClick={() => setTab('Gap map')}>
+                  Open the gap map →
+                </button>
+              </div>
+              <button type="button" className="jv-hero-map" onClick={() => setTab('Gap map')} aria-label="Open the full gap map">
+                <MiniGapMap investigations={investigations} habitat={habitat} />
+                <span className="jv-hero-map-cap">O2 % vs pressure (psi) · cyan = tested · ember = {habitat?.name}</span>
+              </button>
+            </section>
             <section className="rounded border border-slate-300 bg-white p-4">
               <h2 className="text-lg font-semibold">{habitat?.name}</h2>
               <div className="jv-stats">
