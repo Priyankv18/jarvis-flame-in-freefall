@@ -1,4 +1,4 @@
-import { show, rangeText, coversO2, coversPressure, coverLabel } from '../lib/format.js'
+import { UNKNOWN, show, rangeText, coversO2, coversPressure, coverLabel } from '../lib/format.js'
 
 export default function Compare({ investigations, habitat, onClose }) {
   const fields = [
@@ -43,7 +43,7 @@ export default function Compare({ investigations, habitat, onClose }) {
                 {investigations.map((i) => {
                   const v = fn(i)
                   return (
-                    <td key={i.id} className={`px-3 py-2 ${v === 'unknown' ? 'text-slate-600' : ''}`}>{v}</td>
+                    <td key={i.id} className={`px-3 py-2 ${v === UNKNOWN ? 'text-slate-600' : ''}`}>{v}</td>
                   )
                 })}
               </tr>

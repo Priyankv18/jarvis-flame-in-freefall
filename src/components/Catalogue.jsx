@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { show, rangeText, coversO2, coversPressure, coverLabel, uniqueValues, sourceUrl } from '../lib/format.js'
+import { UNKNOWN, show, rangeText, coversO2, coversPressure, coverLabel, uniqueValues, sourceUrl } from '../lib/format.js'
 import Compare from './Compare.jsx'
 
 const badge = (v) =>
@@ -8,6 +8,15 @@ const badge = (v) =>
     : v === false
       ? 'bg-rose-100 text-rose-900'
       : 'bg-slate-200 text-slate-800'
+
+// Marks records with values filled from the PSI record (listed in psi_filled).
+function PsiTag() {
+  return (
+    <span className="rounded bg-sky-100 px-1.5 py-0.5 text-xs font-medium text-sky-900" title="Some values filled from the PSI record">
+      PSI
+    </span>
+  )
+}
 
 function Select({ label, value, onChange, options }) {
   return (
@@ -53,6 +62,11 @@ function Detail({ inv, habitat, meta, onClose }) {
         <div>
           <h3 className="text-lg font-semibold">{inv.name}</h3>
           <p className="text-sm text-slate-700">{inv.id}{inv.psi_id ? ` (${inv.psi_id})` : ''}</p>
+          {inv.psi_filled?.length > 0 && (
+            <p className="text-xs text-slate-700">
+              <PsiTag /> Filled from the PSI record: {inv.psi_filled.join(', ')}
+            </p>
+          )}
         </div>
         <button onClick={onClose} className="rounded border border-slate-400 px-2 py-1 text-sm">Close</button>
       </div>
@@ -65,7 +79,7 @@ function Detail({ inv, habitat, meta, onClose }) {
         {rows.map(([k, v]) => (
           <div key={k} className="flex gap-2">
             <dt className="font-medium">{k}:</dt>
-            <dd className={v === 'unknown' ? 'text-slate-600' : ''}>{v}</dd>
+            <dd className={v === UNKNOWN ? 'text-slate-600' : ''}>{v}</dd>
           </div>
         ))}
       </dl>
@@ -73,12 +87,12 @@ function Detail({ inv, habitat, meta, onClose }) {
         <div className="mt-3 text-sm">
           <h4 className="font-medium">Key findings</h4>
           <ul className="list-disc pl-5">
-            {inv.key_findings.map((f) => <li key={f}>{f}</li>)}
+            {inv.key_findings.map((f, n) => <li key={`${n}-${f}`}>{f}</li>)}
           </ul>
         </div>
       )}
-      {notes.map((n) => (
-        <p key={n} className="mt-2 text-sm text-slate-700">Note: {n}</p>
+      {notes.map((n, idx) => (
+        <p key={`${idx}-${n}`} className="mt-2 text-sm text-slate-700">Note: {n}</p>
       ))}
       {url && (
         <a className="mt-3 inline-block text-sm text-blue-800 underline" href={url} target="_blank" rel="noreferrer">
@@ -176,7 +190,9 @@ export default function Catalogue({ investigations, habitat, meta }) {
                     <button className="text-left font-medium text-blue-800 underline" onClick={() => setSelected(i.id)}>
                       {i.name}
                     </button>
-                    <div className="text-xs text-slate-600">{i.id}</div>
+                    <div className="text-xs text-slate-600">
+                      {i.id} {i.psi_filled?.length > 0 && <PsiTag />}
+                    </div>
                   </td>
                   <td className="px-3 py-2">{show(i.family)}</td>
                   <td className="px-3 py-2">{rangeText(i.o2_min, i.o2_max)}</td>
