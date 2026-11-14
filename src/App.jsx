@@ -38,19 +38,28 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-4">
-      <header className="mb-4">
-        <h1 className="text-2xl font-bold">Fire Safety Explorer</h1>
-        <p className="text-sm text-slate-700">
-          What does microgravity combustion research tell us about fire safety in crewed habitats?
-        </p>
+    <div className="jarvis mx-auto max-w-6xl p-4">
+      <header className="jv-header">
+        <div className="jv-brand">
+          <span className="jv-flame" aria-hidden="true" />
+          <div>
+            <h1 className="jv-wordmark">JARVIS</h1>
+            <p className="jv-sub">
+              <strong>Fire Safety Explorer</strong> · what microgravity combustion research tells us about fire in crewed habitats
+            </p>
+          </div>
+        </div>
+        <div className="jv-status" aria-label="Dataset status">
+          <span className="jv-chip"><span className="jv-dot" />{investigations.length} investigations</span>
+          <span className="jv-chip"><span className="jv-dot ember" />{habitats.length} habitats</span>
+        </div>
       </header>
 
       <div className="mb-4 flex flex-wrap items-end gap-4">
-        <label className="flex flex-col text-sm font-medium text-slate-800">
-          Habitat
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-800">
+          <span className="jv-label">Habitat</span>
           <select
-            className="mt-1 rounded border border-slate-400 bg-white px-2 py-1.5 font-normal"
+            className="mt-1 rounded border border-slate-400 bg-white px-3 py-2 font-normal"
             value={habitatId}
             onChange={(e) => setHabitatId(e.target.value)}
           >
@@ -59,18 +68,16 @@ export default function App() {
             ))}
           </select>
         </label>
-        {habitat && <p className="text-sm text-slate-700">{habitatText(habitat)}. {habitat.note}</p>}
+        {habitat && <p className="jv-habitat-note"><b>{habitatText(habitat)}.</b> {habitat.note}</p>}
       </div>
 
-      <nav aria-label="Sections" className="mb-4 flex flex-wrap gap-2">
+      <nav aria-label="Sections" className="jv-tabs mb-5">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             aria-current={tab === t ? 'page' : undefined}
-            className={`rounded px-3 py-1.5 text-sm font-medium ${
-              tab === t ? 'bg-blue-800 text-white' : 'border border-slate-400 bg-white text-slate-900'
-            }`}
+            className="jv-tab"
           >
             {t}
           </button>
@@ -82,7 +89,25 @@ export default function App() {
           <div className="space-y-4">
             <section className="rounded border border-slate-300 bg-white p-4">
               <h2 className="text-lg font-semibold">{habitat?.name}</h2>
-              <p className="mt-2 text-sm">
+              <div className="jv-stats">
+                <div className="jv-stat">
+                  <div className="jv-stat-num">{investigations.length}</div>
+                  <div className="jv-stat-label">investigations in the dataset</div>
+                </div>
+                <div className="jv-stat">
+                  <div className="jv-stat-num cyan">{o2Counts.yes}</div>
+                  <div className="jv-stat-label">tested at this oxygen level</div>
+                </div>
+                <div className="jv-stat">
+                  <div className="jv-stat-num cyan">{pressureCounts.yes}</div>
+                  <div className="jv-stat-label">tested at this pressure</div>
+                </div>
+                <div className="jv-stat">
+                  <div className="jv-stat-num ember">{o2Counts.unknown}</div>
+                  <div className="jv-stat-label">oxygen range not stated</div>
+                </div>
+              </div>
+              <p className="mt-3 text-sm">
                 Oxygen: of {investigations.length} investigations, {o2Counts.yes} tested a range that includes this
                 oxygen level, {o2Counts.no} did not, and for {o2Counts.unknown} the range is not fully stated.
               </p>
@@ -118,7 +143,7 @@ export default function App() {
         {tab === 'Ask' && <AskPanel {...props} />}
       </main>
 
-      <footer className="mt-8 border-t border-slate-300 pt-3 text-xs text-slate-700">
+      <footer className="jv-footer">
         Built with AI assistance (Claude). Data compiled from public NASA sources with AI help and reviewed by the team;
         unstated values are shown as unknown.
       </footer>

@@ -19,17 +19,17 @@ const MIN_BOX = 8; // px, so single-value tests are still visible
 const CREW_MAX_PSI = 16; // just above ISS cabin pressure (14.7 psi)
 
 const PILLAR_COLORS = {
-  prevention: '#ea580c',
-  detection: '#ca8a04',
-  suppression: '#0284c7',
+  prevention: '#a78bfa',
+  detection: '#facc15',
+  suppression: '#22d3ee',
 };
-const OTHER_COLOR = '#64748b';
-const ZONE_COLOR = '#7c3aed';
-const ZONE_TEXT = '#5b21b6';
-const OTHER_ZONE = '#0369a1';
-const TEXT = '#0f172a';
-const MUTED = '#475569';
-const GRID = '#e2e8f0';
+const OTHER_COLOR = '#8ea2bd';
+const ZONE_COLOR = '#ff7a2f'; // ember: the high-oxygen danger zone
+const ZONE_TEXT = '#ffb347';
+const OTHER_ZONE = '#38bdf8';
+const TEXT = '#e6edf7';
+const MUTED = '#8ea2bd';
+const GRID = 'rgba(56,189,248,0.10)';
 const MOON_IDS = ['moon-base', 'moon_base'];
 
 const pillarOf = (inv) => {
@@ -260,14 +260,14 @@ export default function GapMap({ investigations, habitats, habitat }) {
       <svg className="gap-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Gap map of tested oxygen and pressure ranges against crew habitat zones">
         <defs>
           <pattern id="moon-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="8" fill={ZONE_COLOR} fillOpacity="0.06" />
-            <line x1="0" y1="0" x2="0" y2="8" stroke={ZONE_COLOR} strokeOpacity="0.22" strokeWidth="2" />
+            <rect width="8" height="8" fill={ZONE_COLOR} fillOpacity="0.10" />
+            <line x1="0" y1="0" x2="0" y2="8" stroke={ZONE_COLOR} strokeOpacity="0.35" strokeWidth="2" />
           </pattern>
           <clipPath id="plot-clip"><rect x={M.l} y={M.t} width={PW} height={PH} /></clipPath>
         </defs>
 
         {/* grid + axes */}
-        <rect x={M.l} y={M.t} width={PW} height={PH} fill="#fff" stroke="#cbd5e1" />
+        <rect x={M.l} y={M.t} width={PW} height={PH} fill="rgba(5,8,15,0.55)" stroke="rgba(56,189,248,0.25)" />
         {xTicks.map((t) => (
           <g key={`x${t}`}>
             <line x1={sx(t)} x2={sx(t)} y1={M.t} y2={M.t + PH} stroke={GRID} />
@@ -289,7 +289,7 @@ export default function GapMap({ investigations, habitats, habitat }) {
             <rect
               key={z.label}
               {...boxRect(z.o2, z.pressure)}
-              fill={z.isMoon ? 'url(#moon-hatch)' : 'rgba(2,132,199,0.06)'}
+              fill={z.isMoon ? 'url(#moon-hatch)' : 'rgba(56,189,248,0.07)'}
               stroke={z.isMoon ? ZONE_COLOR : OTHER_ZONE}
               strokeWidth={z.isSelected ? 2.5 : 1.5}
             />
@@ -340,7 +340,7 @@ export default function GapMap({ investigations, habitats, habitat }) {
           <g key={z.label}>
             <path
               d={`M${cx} ${cy - 8} L${cx + 8} ${cy} L${cx} ${cy + 8} L${cx - 8} ${cy} Z`}
-              fill="#fff"
+              fill="#0c1424"
               stroke={z.isSelected ? ZONE_COLOR : TEXT}
               strokeWidth={z.isSelected ? 2.5 : 1.5}
             />

@@ -161,7 +161,7 @@ export default function AskPanel({ investigations = [], habitat }) {
 
       <div className="my-4 flex flex-col gap-4" aria-live="polite">
         {messages.map((m, i) => <Message key={i} msg={m} byId={byId} />)}
-        {loading && <p className="text-sm text-slate-700">JARVIS is reading the records…</p>}
+        {loading && <p className="jv-thinking">JARVIS is reading the records…</p>}
         <div ref={endRef} />
       </div>
 
