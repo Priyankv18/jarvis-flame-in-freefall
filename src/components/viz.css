@@ -81,6 +81,25 @@
 }
 .bar span { height: 100%; transition: width 0.25s ease; }
 .coverage { font-size: 12px; color: var(--viz-muted); margin-top: 4px; }
+
+/* Phones: each ranked investigation becomes a small card (rank, name, score on top; bar and reason below). */
+@media (max-width: 700px) {
+  .rank-table thead { display: none; }
+  .rank-table, .rank-table tbody { display: block; }
+  .rank-table tr {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    gap: 6px 10px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .rank-table td { padding: 0; border: 0; }
+  .rank-table td:nth-child(4),
+  .rank-table td:nth-child(5) { grid-column: 1 / -1; }
+  .breakdown { min-width: 0; }
+  .rank-table .why { max-width: none; }
+}
 .coverage.low { color: #b45309; }
 
 /* ---------- Gap map ---------- */
@@ -101,7 +120,14 @@
   font-size: 14px;
   line-height: 1.5;
 }
-.gap-svg { width: 100%; height: auto; display: block; }
+/* On phones the chart keeps a readable size and scrolls sideways inside its card. */
+.gap-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.gap-svg { width: 100%; min-width: 640px; height: auto; display: block; }
+.gap-swipe { display: none; font-size: 12px; margin: 0 0 6px; }
+@media (max-width: 700px) {
+  .gap-swipe { display: block; }
+  .viz { padding: 12px; }
+}
 .gap-svg text { fill: var(--viz-muted); font-size: 12px; font-family: inherit; }
 .gap-svg .axis-title { fill: var(--viz-text); font-size: 13px; font-weight: 500; }
 .gap-svg .zone-label { font-size: 12px; font-weight: 600; }

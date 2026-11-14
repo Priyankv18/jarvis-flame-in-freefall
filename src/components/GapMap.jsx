@@ -255,6 +255,8 @@ export default function GapMap({ investigations, habitats, habitat }) {
         <label><input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} /> Labels</label>
       </div>
 
+      <p className="gap-swipe muted">Swipe sideways to see the whole chart.</p>
+      <div className="gap-scroll">
       <svg className="gap-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Gap map of tested oxygen and pressure ranges against crew habitat zones">
         <defs>
           <pattern id="moon-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -357,6 +359,7 @@ export default function GapMap({ investigations, habitats, habitat }) {
           </g>
         )))}
       </svg>
+      </div>
 
       <div className="gap-legend">
         {Object.entries(PILLAR_COLORS).map(([k, c]) => (
