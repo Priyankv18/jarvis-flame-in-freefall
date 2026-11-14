@@ -3,14 +3,14 @@
    Everything is scoped under .viz so it cannot leak into other tabs. */
 
 .viz {
-  --viz-text: #0f172a;
-  --viz-muted: #475569;
-  --viz-border: #cbd5e1;
-  --viz-soft: #f1f5f9;
-  --viz-accent: #1e40af;
-  background: #fff;
+  --viz-text: var(--jv-text, #e6edf7);
+  --viz-muted: var(--jv-muted, #8ea2bd);
+  --viz-border: var(--jv-line, rgba(56,189,248,0.16));
+  --viz-soft: rgba(56,189,248,0.08);
+  --viz-accent: #22d3ee;
+  background: var(--jv-panel, rgba(12,20,36,0.78));
   border: 1px solid var(--viz-border);
-  border-radius: 6px;
+  border-radius: 12px;
   padding: 16px;
   color: var(--viz-text);
 }
@@ -24,9 +24,9 @@
   font: inherit;
   font-size: 13px;
   color: var(--viz-text);
-  background: #fff;
-  border: 1px solid #94a3b8;
-  border-radius: 4px;
+  background: rgba(5,8,15,0.7);
+  border: 1px solid rgba(142,162,189,0.35);
+  border-radius: 8px;
   padding: 5px 10px;
   cursor: pointer;
 }
@@ -41,7 +41,7 @@
   margin-bottom: 16px;
   border: 1px solid var(--viz-border);
   border-radius: 6px;
-  background: #f8fafc;
+  background: rgba(5,8,15,0.45);
 }
 .weights-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
 .weights-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--viz-muted); }
@@ -64,8 +64,8 @@
   border-bottom: 2px solid var(--viz-border);
   white-space: nowrap;
 }
-.rank-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-.rank-table tbody tr:hover { background: #f8fafc; }
+.rank-table td { padding: 10px; border-bottom: 1px solid rgba(56,189,248,0.09); vertical-align: middle; }
+.rank-table tbody tr:hover { background: rgba(56,189,248,0.05); }
 .rank-table .num { font-variant-numeric: tabular-nums; }
 .rank-table .score { font-size: 20px; font-weight: 700; }
 .rank-table .inv-name { color: var(--viz-muted); font-size: 13px; }
@@ -76,7 +76,7 @@
   height: 14px;
   border-radius: 3px;
   overflow: hidden;
-  background: repeating-linear-gradient(45deg, #f1f5f9 0 6px, #e2e8f0 6px 12px);
+  background: repeating-linear-gradient(45deg, rgba(142,162,189,0.10) 0 6px, rgba(142,162,189,0.04) 6px 12px);
   border: 1px solid var(--viz-border);
 }
 .bar span { height: 100%; transition: width 0.25s ease; }
@@ -92,7 +92,7 @@
     gap: 6px 10px;
     align-items: center;
     padding: 12px 0;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(56,189,248,0.09);
   }
   .rank-table td { padding: 0; border: 0; }
   .rank-table td:nth-child(4),
@@ -100,22 +100,22 @@
   .breakdown { min-width: 0; }
   .rank-table .why { max-width: none; }
 }
-.coverage.low { color: #b45309; }
+.coverage.low { color: #fbbf24; }
 
 /* ---------- Gap map ---------- */
 .gap-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 12px; font-size: 13px; color: var(--viz-muted); }
 .gap-controls label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
 .gap-controls input[type='checkbox'] { width: 16px; height: 16px; }
-.segmented { display: inline-flex; border: 1px solid #94a3b8; border-radius: 4px; overflow: hidden; }
+.segmented { display: inline-flex; border: 1px solid rgba(142,162,189,0.35); border-radius: 8px; overflow: hidden; }
 .viz .segmented button { border: 0; border-radius: 0; padding: 6px 12px; }
-.viz .segmented button + button { border-left: 1px solid #94a3b8; }
-.viz .segmented button.on { background: var(--viz-accent); color: #fff; }
+.viz .segmented button + button { border-left: 1px solid rgba(142,162,189,0.35); }
+.viz .segmented button.on { background: linear-gradient(180deg, rgba(34,211,238,0.30), rgba(14,165,233,0.18)); color: #e9fbff; box-shadow: 0 0 14px rgba(34,211,238,0.25) inset; }
 
 .gap-headline {
-  border-left: 3px solid #7c3aed;
+  border-left: 3px solid #ff7a2f;
   padding: 8px 12px;
   margin: 0 0 12px;
-  background: #f5f3ff;
+  background: linear-gradient(90deg, rgba(255,122,47,0.12), rgba(255,122,47,0.02));
   border-radius: 0 6px 6px 0;
   font-size: 14px;
   line-height: 1.5;
@@ -139,17 +139,28 @@
   font-weight: 500;
   pointer-events: none;
   paint-order: stroke;
-  stroke: #fff;
+  stroke: #05080f;
   stroke-width: 3px;
 }
 
 .gap-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--viz-muted); margin: 8px 0 12px; }
 .gap-legend span { display: inline-flex; gap: 6px; align-items: center; }
 .swatch.dashed { background: transparent; border: 1.5px dashed var(--viz-muted); }
-.swatch.zone { background: #ede9fe; border: 1.5px solid #7c3aed; }
-.swatch.diamond { background: #fff; border: 1.5px solid var(--viz-text); transform: rotate(45deg); width: 9px; height: 9px; }
+.swatch.zone { background: rgba(255,122,47,0.2); border: 1.5px solid #ff7a2f; }
+.swatch.diamond { background: #0c1424; border: 1.5px solid var(--viz-text); transform: rotate(45deg); width: 9px; height: 9px; }
 
-.gap-detail { border: 1px solid var(--viz-border); border-radius: 6px; padding: 10px 14px; background: #f8fafc; font-size: 14px; line-height: 1.5; min-height: 48px; }
-.gap-detail-row + .gap-detail-row { margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0; }
+.gap-detail { border: 1px solid var(--viz-border); border-radius: 6px; padding: 10px 14px; background: rgba(5,8,15,0.45); font-size: 14px; line-height: 1.5; min-height: 48px; }
+.gap-detail-row + .gap-detail-row { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(56,189,248,0.09); }
 .gap-detail-row .muted { font-size: 13px; }
 .gap-unknown { margin: 12px 0 0; font-size: 13px; }
+
+/* JARVIS theme extras */
+.viz h2 { font-family: var(--jv-display, inherit); }
+.rank-table .score { font-family: var(--jv-mono, monospace); color: var(--jv-cyan-hi, #22d3ee); text-shadow: 0 0 12px rgba(34,211,238,0.35); }
+.rank-table tbody tr:first-child .score { color: var(--jv-ember, #ff7a2f); text-shadow: 0 0 12px rgba(255,122,47,0.45); }
+.weight-label .share, .rank-table .num { font-family: var(--jv-mono, monospace); }
+.bar span { animation: viz-grow 0.7s ease-out both; transform-origin: left; }
+@keyframes viz-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.gap-headline strong { color: var(--jv-ember-hi, #ffb347); }
+.gap-svg .axis-title { letter-spacing: 0.04em; }
+@media (prefers-reduced-motion: reduce) { .bar span { animation: none; } }
