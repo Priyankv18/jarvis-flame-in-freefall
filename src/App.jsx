@@ -8,6 +8,70 @@ import { coversO2, coversPressure, habitatText } from './lib/format.js'
 
 const TABS = ['Explore', 'Catalogue', 'Gap map', 'Rank', 'Ask']
 
+// Short "O2 / pressure" readout for a habitat card, from the habitat's own fields.
+function habitatReadout(h) {
+  const o2 = h.o2 != null ? `${h.o2}%` : h.o2_min != null ? `≥${h.o2_min}%` : '?'
+  const psi = h.pressure_psi ?? (h.pressure_atm != null ? Math.round(h.pressure_atm * 147) / 10 : null)
+  const open = h.pressure_atm_max != null && h.pressure_atm == null
+  return `O2 ${o2} · ${psi == null ? '? psi' : `${open ? '≤' : ''}${psi} psi`}`
+}
+
+// Simple line icons for each habitat (generic shapes, no logos).
+function HabitatIcon({ id }) {
+  const common = { width: 26, height: 26, viewBox: '0 0 32 32', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
+  switch (id) {
+    case 'iss':
+      return (
+        <svg {...common}>
+          <rect x="13" y="12" width="6" height="8" rx="1" />
+          <path d="M16 12V8M16 20v4M13 16H8M19 16h5" />
+          <rect x="3" y="11" width="5" height="10" rx="0.5" />
+          <rect x="24" y="11" width="5" height="10" rx="0.5" />
+        </svg>
+      )
+    case 'moon_base':
+      return (
+        <svg {...common}>
+          <path d="M5 23a11 11 0 0 1 22 0" />
+          <path d="M3 23h26M12 23v-4h8v4" />
+          <circle cx="25" cy="7" r="3" />
+        </svg>
+      )
+    case 'rover':
+      return (
+        <svg {...common}>
+          <path d="M5 19v-6a3 3 0 0 1 3-3h12l5 5v4z" />
+          <path d="M20 10v5h5" />
+          <circle cx="10" cy="22" r="3" />
+          <circle cx="22" cy="22" r="3" />
+        </svg>
+      )
+    case 'mars_base':
+      return (
+        <svg {...common}>
+          <path d="M6 24a7 7 0 0 1 14 0M18 24a5 5 0 0 1 10 0" />
+          <path d="M3 24h26" />
+          <circle cx="10" cy="8" r="4" />
+          <path d="M7 9.5c2 .8 4 .8 6 0" />
+        </svg>
+      )
+    case 'suit':
+      return (
+        <svg {...common}>
+          <path d="M8 15a8 8 0 0 1 16 0v5a4 4 0 0 1-4 4h-8a4 4 0 0 1-4-4z" />
+          <rect x="11" y="13" width="10" height="6" rx="3" />
+          <path d="M10 28h12" />
+        </svg>
+      )
+    default:
+      return (
+        <svg {...common}>
+          <circle cx="16" cy="16" r="9" />
+        </svg>
+      )
+  }
+}
+
 export default function App() {
   const [tab, setTab] = useState('Explore')
   const habitats = data.habitats ?? []
@@ -55,19 +119,27 @@ export default function App() {
         </div>
       </header>
 
-      <div className="mb-4 flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 text-sm font-medium text-slate-800">
-          <span className="jv-label">Habitat</span>
-          <select
-            className="mt-1 rounded border border-slate-400 bg-white px-3 py-2 font-normal"
-            value={habitatId}
-            onChange={(e) => setHabitatId(e.target.value)}
-          >
-            {habitats.map((h) => (
-              <option key={h.id} value={h.id}>{h.name}</option>
-            ))}
-          </select>
-        </label>
+      <div className="mb-4">
+        <span className="jv-label" id="habitat-label">Choose a crew habitat</span>
+        <div className="jv-habitats" role="radiogroup" aria-labelledby="habitat-label">
+          {habitats.map((h) => {
+            const on = h.id === habitatId
+            return (
+              <button
+                key={h.id}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                className={`jv-habitat${on ? ' on' : ''}`}
+                onClick={() => setHabitatId(h.id)}
+              >
+                <HabitatIcon id={h.id} />
+                <span className="jv-habitat-name">{h.name}</span>
+                <span className="jv-habitat-read">{habitatReadout(h)}</span>
+              </button>
+            )
+          })}
+        </div>
         {habitat && <p className="jv-habitat-note"><b>{habitatText(habitat)}.</b> {habitat.note}</p>}
       </div>
 
