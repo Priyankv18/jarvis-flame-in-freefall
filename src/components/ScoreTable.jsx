@@ -88,7 +88,7 @@ export default function ScoreTable({ investigations, habitat }) {
   );
 
   return (
-    <section>
+    <section className="viz">
       <h2>Most relevant for: {habitat?.name}</h2>
       <p className="viz-intro">
         Each investigation gets a 0-100 score: a weighted sum of five factors. Move the sliders to
@@ -103,6 +103,7 @@ export default function ScoreTable({ investigations, habitat }) {
         setUnknownValue={setUnknownValue}
       />
 
+      <div className="rank-table-wrap">
       <table className="rank-table">
         <thead>
           <tr>
@@ -128,6 +129,7 @@ export default function ScoreTable({ investigations, habitat }) {
           ))}
         </tbody>
       </table>
+      </div>
     </section>
   );
 }
