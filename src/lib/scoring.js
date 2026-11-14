@@ -103,15 +103,15 @@ export function habitatZone(h) {
 // Factors (each returns a number 0..1, or null when the data is unknown)
 // ---------------------------------------------------------------------------
 export const FACTORS = [
-  { key: 'oxygen', label: 'Oxygen overlap', color: '#ff7a1a',
+  { key: 'oxygen', label: 'Oxygen overlap', color: '#f97316',
     help: 'Does the tested O2 range reach the habitat O2 level? Partial credit within 25 points.' },
-  { key: 'pressure', label: 'Pressure overlap', color: '#5cc8ff',
+  { key: 'pressure', label: 'Pressure overlap', color: '#0ea5e9',
     help: 'Does the tested pressure range reach the habitat pressure? Partial credit within 5 psi.' },
-  { key: 'fuel', label: 'Fuel type', color: '#f2c14e',
+  { key: 'fuel', label: 'Fuel type', color: '#eab308',
     help: 'Solids (fabrics, plastics) are the main cabin fire load; liquids and gases score lower.' },
-  { key: 'pillar', label: 'Safety pillar', color: '#8fd694',
+  { key: 'pillar', label: 'Safety pillar', color: '#22c55e',
     help: 'Studies tied to prevention, detection or suppression score full marks.' },
-  { key: 'relevance', label: 'Direct relevance', color: '#c39bff',
+  { key: 'relevance', label: 'Direct relevance', color: '#a855f7',
     help: 'Direct fire safety studies score 1, secondary 0.7, indirect fundamental combustion studies 0.4.' },
 ];
 
