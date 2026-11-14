@@ -96,6 +96,29 @@ export default function ScoreTable({ investigations, habitat }) {
         because the factor scored low or because the data is unknown (faded colour).
       </p>
 
+      <div className="top3" aria-label="Top three investigations">
+        {ranked.slice(0, 3).map((r, i) => {
+          const pillars = r.inv.pillars ?? (r.inv.safety_pillar ? [r.inv.safety_pillar] : []);
+          return (
+            <article key={r.inv.id} className={`top3-card${i === 0 ? ' first' : ''}`}>
+              <div className="top3-head">
+                <span className="top3-rank">#{i + 1}</span>
+                <span className="top3-score">{r.total}</span>
+              </div>
+              <h3 className="top3-id">{r.inv.id}</h3>
+              {r.inv.name && <p className="top3-name">{r.inv.name}</p>}
+              <BreakdownBar result={r} />
+              <p className="top3-why">{explainScore(r, habitat)}</p>
+              {pillars.length > 0 && (
+                <div className="top3-tags">
+                  {pillars.map((p) => <span key={p} className="top3-tag">{p}</span>)}
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+
       <WeightSliders
         weights={weights}
         setWeights={setWeights}

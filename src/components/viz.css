@@ -154,6 +154,36 @@
 .gap-detail-row .muted { font-size: 13px; }
 .gap-unknown { margin: 12px 0 0; font-size: 13px; }
 
+/* ---------- Ranking: top-3 cards ---------- */
+.top3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.top3-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--viz-border);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(34, 211, 238, 0.08), rgba(5, 8, 15, 0.5) 60%);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.top3-card:hover { transform: translateY(-2px); box-shadow: 0 0 22px rgba(34, 211, 238, 0.15); }
+.top3-card.first {
+  border-color: rgba(255, 122, 47, 0.6);
+  background: linear-gradient(160deg, rgba(255, 122, 47, 0.16), rgba(5, 8, 15, 0.5) 65%);
+  box-shadow: 0 0 26px rgba(255, 122, 47, 0.18);
+}
+.top3-head { display: flex; align-items: baseline; justify-content: space-between; }
+.top3-rank { font-family: var(--jv-mono, monospace); font-size: 13px; letter-spacing: 0.1em; color: var(--viz-muted); }
+.top3-card.first .top3-rank { color: var(--jv-ember-hi, #ffb347); }
+.top3-score { font-family: var(--jv-mono, monospace); font-size: 38px; font-weight: 600; line-height: 1; color: var(--jv-cyan-hi, #22d3ee); text-shadow: 0 0 16px rgba(34, 211, 238, 0.4); }
+.top3-card.first .top3-score { color: var(--jv-ember, #ff7a2f); text-shadow: 0 0 18px rgba(255, 122, 47, 0.5); }
+.top3-id { font-family: var(--jv-display, inherit); font-size: 17px; font-weight: 600; margin: 4px 0 0; }
+.top3-name { margin: 0; font-size: 13px; color: var(--viz-muted); min-height: 2.6em; }
+.top3-why { margin: 2px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--viz-muted); }
+.top3-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 4px; }
+.top3-tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--viz-border); color: var(--viz-text); background: rgba(56, 189, 248, 0.06); }
+@media (max-width: 760px) { .top3 { grid-template-columns: 1fr; } .top3-name { min-height: 0; } }
+
 /* JARVIS theme extras */
 .viz h2 { font-family: var(--jv-display, inherit); }
 .rank-table .score { font-family: var(--jv-mono, monospace); color: var(--jv-cyan-hi, #22d3ee); text-shadow: 0 0 12px rgba(34,211,238,0.35); }
