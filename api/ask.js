@@ -16,6 +16,13 @@
 //   3. Every cited id is checked against the context on the server. Ids the model
 //      invents are removed from `citations` and reported in `unverified`.
 
+// Tried in order after the main model when it is busy, slow or retired.
+const FALLBACK_MODELS = {
+  gemini: ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash'],
+  anthropic: [],
+  openai: [],
+};
+
 const DEFAULT_MODELS = {
   gemini: 'gemini-2.5-flash',
   anthropic: 'claude-haiku-5-5',
@@ -26,7 +33,9 @@ const MAX_QUESTION = 500;
 const MAX_RECORDS = 10;
 // Give up on the model after this long and fall back to the matching records,
 // so the Ask tab never hangs during a demo.
-const LLM_TIMEOUT_MS = 20000;
+const LLM_TIMEOUT_MS = 12000;
+// Stop trying further models after this long in total.
+const TOTAL_BUDGET_MS = 20000;
 
 async function fetchWithTimeout(url, options) {
   const controller = new AbortController();
@@ -201,20 +210,33 @@ export default async function handler(req, res) {
     res.status(500).json({ error: `Unknown LLM_PROVIDER "${provider}". Use gemini, anthropic or openai.` });
     return;
   }
-  const model = process.env.LLM_MODEL || DEFAULT_MODELS[provider];
+  // Try the configured model first, then fallbacks, so a busy or retired model does not
+  // break the demo. LLM_FALLBACK_MODELS (comma separated) overrides the defaults.
+  const primary = process.env.LLM_MODEL || DEFAULT_MODELS[provider];
+  const fallbacks = (process.env.LLM_FALLBACK_MODELS ?? (FALLBACK_MODELS[provider] || []).join(','))
+    .split(',').map((m) => m.trim()).filter(Boolean);
+  const models = [...new Set([primary, ...fallbacks])];
+  const started = Date.now();
+  const failures = [];
 
-  try {
-    const answer = (await call(key, model, SYSTEM_PROMPT, history, buildUserMessage(question, habitat, context))).trim();
-    if (!answer) throw new Error('The model returned an empty answer.');
-    res.status(200).json({ answer, ...checkCitations(answer, context), model: `${provider}/${model}` });
-  } catch (err) {
-    // Fall back to the offline answer so the demo never shows a blank screen.
-    const answer = offlineAnswer(question, context);
-    res.status(200).json({
-      answer,
-      ...checkCitations(answer, context),
-      model: 'offline',
-      warning: `AI model unavailable (${err.message}). Showing matching records instead.`,
-    });
+  for (const model of models) {
+    if (Date.now() - started > TOTAL_BUDGET_MS) break;
+    try {
+      const answer = (await call(key, model, SYSTEM_PROMPT, history, buildUserMessage(question, habitat, context))).trim();
+      if (!answer) throw new Error('empty answer');
+      res.status(200).json({ answer, ...checkCitations(answer, context), model: `${provider}/${model}` });
+      return;
+    } catch (err) {
+      failures.push(`${model}: ${err.message}`);
+    }
   }
+
+  // Every model failed: fall back to the offline answer so the demo never shows a blank screen.
+  const answer = offlineAnswer(question, context);
+  res.status(200).json({
+    answer,
+    ...checkCitations(answer, context),
+    model: 'offline',
+    warning: `AI model unavailable (${failures.join('; ') || 'time limit reached'}). Showing matching records instead.`,
+  });
 }
