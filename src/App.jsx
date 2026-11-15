@@ -13,6 +13,7 @@ const Explore = lazy(() => import('./components/Explore.jsx'))
 const Catalogue = lazy(() => import('./components/Catalogue.jsx'))
 const GapMap = lazy(() => import('./components/GapMap.jsx'))
 const ScoreTable = lazy(() => import('./components/ScoreTable.jsx'))
+const FlameSimulator = lazy(() => import('./components/FlameSimulator.jsx'))
 const AskPanel = lazy(() => import('./components/AskPanel.jsx'))
 
 // The active tab lives in the URL hash (#catalogue) so views can be linked and bookmarked.
@@ -87,6 +88,7 @@ export default function App() {
     catalogue: <Catalogue {...props} openId={openStudy} />,
     gapmap: <GapMap {...props} />,
     rank: <ScoreTable {...props} />,
+    simulator: <FlameSimulator {...props} />,
     ask: <AskPanel {...props} />,
   }
 

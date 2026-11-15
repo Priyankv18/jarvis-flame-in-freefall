@@ -1,4 +1,4 @@
-import { LayoutDashboard, Library, ChartScatter, ListOrdered, MessagesSquare } from 'lucide-react'
+import { LayoutDashboard, Library, ChartScatter, ListOrdered, Flame, MessagesSquare } from 'lucide-react'
 
 // The five sections, in rail order. `title` and `blurb` feed the top bar.
 export const SECTIONS = [
@@ -29,6 +29,13 @@ export const SECTIONS = [
     icon: ListOrdered,
     title: 'Relevance ranking',
     blurb: 'Weight what matters and see which studies speak to this habitat.',
+  },
+  {
+    id: 'simulator',
+    label: 'Simulator',
+    icon: Flame,
+    title: 'Flame simulator',
+    blurb: 'Change the air around a Saffire material and check which studies back it up.',
   },
   {
     id: 'ask',

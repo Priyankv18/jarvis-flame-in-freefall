@@ -24,6 +24,22 @@ const DEFAULT_MODELS = {
 
 const MAX_QUESTION = 500;
 const MAX_RECORDS = 10;
+// Give up on the model after this long and fall back to the matching records,
+// so the Ask tab never hangs during a demo.
+const LLM_TIMEOUT_MS = 20000;
+
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`no reply within ${LLM_TIMEOUT_MS / 1000} s`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 const SYSTEM_PROMPT = `You are JARVIS, a fire safety research assistant for crewed space habitats.
 You answer questions using ONLY the NASA microgravity combustion investigation records provided in the user message. Each record has an "id".
@@ -83,18 +99,28 @@ function offlineAnswer(question, context) {
   return `Offline mode (no AI model connected). The most relevant records for "${question}" are:\n${lines.join('\n')}`;
 }
 
+// Gemini 3 models think before answering (default level "medium"), which is too slow for chat.
+// They take a thinkingLevel instead of temperature; older models keep the old settings.
+// LLM_THINKING can override the level (low | medium | high).
+function geminiConfig(model) {
+  if (/^gemini-[3-9]/.test(model)) {
+    return { maxOutputTokens: 2048, thinkingConfig: { thinkingLevel: process.env.LLM_THINKING || 'low' } };
+  }
+  return { temperature: 0.2, maxOutputTokens: 2048 };
+}
+
 async function callGemini(key, model, system, history, user) {
   const contents = [
     ...history.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
     { role: 'user', parts: [{ text: user }] },
   ];
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+  const r = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents,
-      generationConfig: { temperature: 0.2, maxOutputTokens: 600 },
+      generationConfig: geminiConfig(model),
     }),
   });
   const j = await r.json();
@@ -103,7 +129,7 @@ async function callGemini(key, model, system, history, user) {
 }
 
 async function callAnthropic(key, model, system, history, user) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
+  const r = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
@@ -120,7 +146,7 @@ async function callAnthropic(key, model, system, history, user) {
 }
 
 async function callOpenAI(key, model, system, history, user) {
-  const r = await fetch('https://api.openai.com/v1/chat/completions', {
+  const r = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify({

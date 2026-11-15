@@ -42,6 +42,25 @@
   --color-f-relevance: #5b7fe0;
   --color-zone: #0652d8;
 
+  /* Flame simulator canvas scene (read at runtime by FlameSimulator.jsx) */
+  --color-duct-top: #0a1233;
+  --color-duct-bottom: #131f6b;
+  --color-duct-grid: #2a3a9a;
+  --color-airflow: #9db7ff;
+  --color-sample: #d6c7a1;
+  --color-char: #0d0d0f;
+  --color-char-edge: #1c1512;
+  --color-ember: #ff7a2f;
+  --color-ember-dim: #3a2a20;
+  --color-igniter: #fca5a5;
+  --color-smoke: #94a3b8;
+  --color-flame-blue: #7dd3fc;
+  --color-flame-blue-deep: #0ea5e9;
+  --color-flame-gold: #ffc85a;
+  --color-flame-core: #ffffff;
+  --color-scene-text: #c9d1f5;
+  --color-flame-out: #ff8a95;
+
   /* Type */
   --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;

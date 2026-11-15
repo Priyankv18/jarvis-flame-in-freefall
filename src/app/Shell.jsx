@@ -22,14 +22,14 @@ export function Rail({ orientation }) {
       </div>
       <TabsList
         aria-label="Sections"
-        className="grid h-full grid-cols-5 md:flex md:h-auto md:flex-col md:items-center md:gap-2 md:px-2"
+        className="grid h-full grid-cols-6 md:flex md:h-auto md:flex-col md:items-center md:gap-2 md:px-2"
       >
         {SECTIONS.map((s) => (
           <Tooltip key={s.id} content={s.blurb} side="right" disabled={!vertical}>
             <TabsTrigger
               value={s.id}
               className={cn(
-                'group relative flex cursor-pointer flex-col items-center justify-center gap-1 text-[11px] font-medium text-rail-text transition-colors',
+                'group relative flex min-w-0 cursor-pointer flex-col items-center justify-center gap-1 text-[10px] font-medium text-rail-text transition-colors md:text-[11px]',
                 'h-full w-full hover:text-white md:h-[4.25rem] md:rounded-2xl md:hover:bg-navy-hover',
                 // aria-selected, not data-state: the tooltip trigger overwrites data-state.
                 'aria-selected:text-white md:aria-selected:bg-navy-deep',
@@ -37,7 +37,7 @@ export function Rail({ orientation }) {
             >
               <span
                 className={cn(
-                  'flex h-8 w-12 items-center justify-center rounded-pill transition-colors',
+                  'flex h-8 w-10 items-center justify-center rounded-pill transition-colors md:w-12',
                   'group-aria-selected:bg-lime group-aria-selected:text-ink',
                 )}
               >
