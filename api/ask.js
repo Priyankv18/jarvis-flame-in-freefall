@@ -99,6 +99,16 @@ function offlineAnswer(question, context) {
   return `Offline mode (no AI model connected). The most relevant records for "${question}" are:\n${lines.join('\n')}`;
 }
 
+// Gemini 3 models think before answering (default level "medium"), which is too slow for chat.
+// They take a thinkingLevel instead of temperature; older models keep the old settings.
+// LLM_THINKING can override the level (low | medium | high).
+function geminiConfig(model) {
+  if (/^gemini-[3-9]/.test(model)) {
+    return { maxOutputTokens: 2048, thinkingConfig: { thinkingLevel: process.env.LLM_THINKING || 'low' } };
+  }
+  return { temperature: 0.2, maxOutputTokens: 2048 };
+}
+
 async function callGemini(key, model, system, history, user) {
   const contents = [
     ...history.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
@@ -110,7 +120,7 @@ async function callGemini(key, model, system, history, user) {
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents,
-      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
+      generationConfig: geminiConfig(model),
     }),
   });
   const j = await r.json();
