@@ -24,6 +24,22 @@ const DEFAULT_MODELS = {
 
 const MAX_QUESTION = 500;
 const MAX_RECORDS = 10;
+// Give up on the model after this long and fall back to the matching records,
+// so the Ask tab never hangs during a demo.
+const LLM_TIMEOUT_MS = 20000;
+
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`no reply within ${LLM_TIMEOUT_MS / 1000} s`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 const SYSTEM_PROMPT = `You are JARVIS, a fire safety research assistant for crewed space habitats.
 You answer questions using ONLY the NASA microgravity combustion investigation records provided in the user message. Each record has an "id".
@@ -88,13 +104,13 @@ async function callGemini(key, model, system, history, user) {
     ...history.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
     { role: 'user', parts: [{ text: user }] },
   ];
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+  const r = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents,
-      generationConfig: { temperature: 0.2, maxOutputTokens: 600 },
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
     }),
   });
   const j = await r.json();
@@ -103,7 +119,7 @@ async function callGemini(key, model, system, history, user) {
 }
 
 async function callAnthropic(key, model, system, history, user) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
+  const r = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
@@ -120,7 +136,7 @@ async function callAnthropic(key, model, system, history, user) {
 }
 
 async function callOpenAI(key, model, system, history, user) {
-  const r = await fetch('https://api.openai.com/v1/chat/completions', {
+  const r = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify({
