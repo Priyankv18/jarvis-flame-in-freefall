@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "hints": "node scripts/psi_hints.mjs",
-    "validate": "node scripts/validate_data.mjs"
+    "validate": "node scripts/validate_data.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -18,6 +19,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.0",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vitest": "^2.1.9"
   }
 }
