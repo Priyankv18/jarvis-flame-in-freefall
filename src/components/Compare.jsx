@@ -1,6 +1,8 @@
-import { UNKNOWN, show, rangeText, coversO2, coversPressure, coverLabel } from '../lib/format.js'
+import { UNKNOWN, show, rangeText, coversO2, coversPressure } from '../lib/format.js'
+import { Chip, CoverChip, cn } from '../ui/index.js'
 
-export default function Compare({ investigations, habitat, onClose }) {
+// Side-by-side table of up to four studies. Rendered inside the compare dialog.
+export default function Compare({ investigations, habitat }) {
   const fields = [
     ['Family', (i) => show(i.family)],
     ['Hardware', (i) => show(i.hardware)],
@@ -13,44 +15,51 @@ export default function Compare({ investigations, habitat, onClose }) {
     ['What was varied', (i) => show(i.variables)],
     ['Pillars', (i) => show(i.pillars)],
     ['Relevance', (i) => show(i.relevance)],
-    ...(habitat
-      ? [
-          [`Oxygen vs ${habitat.name}`, (i) => coverLabel(coversO2(i, habitat))],
-          [`Pressure vs ${habitat.name}`, (i) => coverLabel(coversPressure(i, habitat))],
-        ]
-      : []),
   ]
+  const cover = habitat
+    ? [
+        [`Oxygen vs ${habitat.name}`, (i) => coversO2(i, habitat)],
+        [`Pressure vs ${habitat.name}`, (i) => coversPressure(i, habitat)],
+      ]
+    : []
   return (
-    <section aria-label="Comparison" className="rounded border border-slate-300 bg-white p-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Side by side</h3>
-        <button onClick={onClose} className="rounded border border-slate-400 px-2 py-1 text-sm">Close</button>
-      </div>
-      <div className="mt-3 overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="bg-slate-100">
-              <th className="px-3 py-2">Field</th>
+    <div className="scroll-thin overflow-x-auto rounded-2xl border border-line">
+      <table className="w-full min-w-[36rem] text-left text-sm">
+        <thead className="bg-surface">
+          <tr>
+            <th scope="col" className="eyebrow w-40 px-4 py-3">Field</th>
+            {investigations.map((i) => (
+              <th key={i.id} scope="col" className="px-4 py-3 align-bottom">
+                <span className="num block text-xs text-muted">{i.id}</span>
+                <span className="font-semibold">{i.name}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {cover.map(([label, fn]) => (
+            <tr key={label} className="border-t border-line bg-cobalt-soft/40">
+              <th scope="row" className="px-4 py-2.5 font-medium">{label}</th>
               {investigations.map((i) => (
-                <th key={i.id} className="px-3 py-2">{i.id}</th>
+                <td key={i.id} className="px-4 py-2.5"><CoverChip value={fn(i)} /></td>
               ))}
             </tr>
-          </thead>
-          <tbody>
-            {fields.map(([label, fn]) => (
-              <tr key={label} className="border-t border-slate-200">
-                <th scope="row" className="px-3 py-2 font-medium">{label}</th>
-                {investigations.map((i) => {
-                  const v = fn(i)
-                  return (
-                    <td key={i.id} className={`px-3 py-2 ${v === UNKNOWN ? 'text-slate-600' : ''}`}>{v}</td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          ))}
+          {fields.map(([label, fn]) => (
+            <tr key={label} className="border-t border-line">
+              <th scope="row" className="px-4 py-2.5 font-medium">{label}</th>
+              {investigations.map((i) => {
+                const v = fn(i)
+                return (
+                  <td key={i.id} className={cn('px-4 py-2.5 align-top', label.includes('(') && 'num')}>
+                    {v === UNKNOWN ? <Chip tone="unknown" size="sm">unknown</Chip> : v}
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }

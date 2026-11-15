@@ -1,255 +1,157 @@
-import { useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react'
+import { LazyMotion, MotionConfig, domAnimation, m } from 'motion/react'
 import data from '../data/investigations.json'
-import Catalogue from './components/Catalogue.jsx'
-import GapMap from './components/GapMap.jsx'
-import ScoreTable from './components/ScoreTable.jsx'
-import AskPanel from './components/AskPanel.jsx'
-import FlameSimulator from './components/FlameSimulator.jsx'
-import MiniGapMap from './components/MiniGapMap.jsx'
-import { coversO2, coversPressure, habitatText } from './lib/format.js'
-import { habitatCoverage } from './lib/scoring.js'
+import { Card, EmptyState, TabSkeleton, Tabs, TabsContent, TooltipProvider } from './ui/index.js'
+import { Rail, TopBar } from './app/Shell.jsx'
+import { CommandPalette } from './app/CommandPalette.jsx'
+import { SECTIONS, sectionById } from './app/sections.js'
+import { useMediaQuery } from './app/useMediaQuery.js'
+import { TriangleAlert } from 'lucide-react'
 
-const TABS = ['Explore', 'Catalogue', 'Gap map', 'Rank', 'Simulator', 'Ask']
+// Each tab is its own chunk so the chart libraries load only when needed.
+const Explore = lazy(() => import('./components/Explore.jsx'))
+const Catalogue = lazy(() => import('./components/Catalogue.jsx'))
+const GapMap = lazy(() => import('./components/GapMap.jsx'))
+const ScoreTable = lazy(() => import('./components/ScoreTable.jsx'))
+const FlameSimulator = lazy(() => import('./components/FlameSimulator.jsx'))
+const AskPanel = lazy(() => import('./components/AskPanel.jsx'))
 
-// Short "O2 / pressure" readout for a habitat card, from the habitat's own fields.
-function habitatReadout(h) {
-  const o2 = h.o2 != null ? `${h.o2}%` : h.o2_min != null ? `≥${h.o2_min}%` : '?'
-  const psi = h.pressure_psi ?? (h.pressure_atm != null ? Math.round(h.pressure_atm * 147) / 10 : null)
-  const open = h.pressure_atm_max != null && h.pressure_atm == null
-  return `O2 ${o2} · ${psi == null ? '? psi' : `${open ? '≤' : ''}${psi} psi`}`
-}
-
-// Simple line icons for each habitat (generic shapes, no logos).
-function HabitatIcon({ id }) {
-  const common = { width: 26, height: 26, viewBox: '0 0 32 32', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
-  switch (id) {
-    case 'iss':
-      return (
-        <svg {...common}>
-          <rect x="13" y="12" width="6" height="8" rx="1" />
-          <path d="M16 12V8M16 20v4M13 16H8M19 16h5" />
-          <rect x="3" y="11" width="5" height="10" rx="0.5" />
-          <rect x="24" y="11" width="5" height="10" rx="0.5" />
-        </svg>
-      )
-    case 'moon_base':
-      return (
-        <svg {...common}>
-          <path d="M5 23a11 11 0 0 1 22 0" />
-          <path d="M3 23h26M12 23v-4h8v4" />
-          <circle cx="25" cy="7" r="3" />
-        </svg>
-      )
-    case 'rover':
-      return (
-        <svg {...common}>
-          <path d="M5 19v-6a3 3 0 0 1 3-3h12l5 5v4z" />
-          <path d="M20 10v5h5" />
-          <circle cx="10" cy="22" r="3" />
-          <circle cx="22" cy="22" r="3" />
-        </svg>
-      )
-    case 'mars_base':
-      return (
-        <svg {...common}>
-          <path d="M6 24a7 7 0 0 1 14 0M18 24a5 5 0 0 1 10 0" />
-          <path d="M3 24h26" />
-          <circle cx="10" cy="8" r="4" />
-          <path d="M7 9.5c2 .8 4 .8 6 0" />
-        </svg>
-      )
-    case 'suit':
-      return (
-        <svg {...common}>
-          <path d="M8 15a8 8 0 0 1 16 0v5a4 4 0 0 1-4 4h-8a4 4 0 0 1-4-4z" />
-          <rect x="11" y="13" width="10" height="6" rx="3" />
-          <path d="M10 28h12" />
-        </svg>
-      )
-    default:
-      return (
-        <svg {...common}>
-          <circle cx="16" cy="16" r="9" />
-        </svg>
-      )
-  }
+// The active tab lives in the URL hash (#catalogue) so views can be linked and bookmarked.
+const tabFromHash = () => {
+  const id = typeof window === 'undefined' ? '' : window.location.hash.slice(1)
+  return SECTIONS.some((s) => s.id === id) ? id : 'explore'
 }
 
 export default function App() {
-  const [tab, setTab] = useState('Explore')
+  const [tab, setTabState] = useState(tabFromHash)
+  const setTab = useCallback((id) => {
+    setTabState(id)
+    if (window.location.hash.slice(1) !== id) window.history.replaceState(null, '', `#${id}`)
+  }, [])
   const habitats = data.habitats ?? []
   const [habitatId, setHabitatId] = useState(habitats[0]?.id ?? null)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  // { id, n }: n changes on every request so the same study can be reopened.
+  const [openStudy, setOpenStudy] = useState(null)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const habitat = habitats.find((h) => h.id === habitatId) ?? null
-  const investigations = data.investigations
-  const nameOf = useMemo(() => Object.fromEntries(investigations.map((i) => [i.id, i.name])), [investigations])
+  const investigations = data.investigations ?? []
+  const section = sectionById(tab)
 
-  // Three-way count for one check: true (range includes the level), false (ruled out), null (not fully stated).
-  const countBy = (check) => {
-    const yes = investigations.filter((i) => check(i, habitat) === true).length
-    const no = investigations.filter((i) => check(i, habitat) === false).length
-    return { yes, no, unknown: investigations.length - yes - no }
-  }
-  const o2Counts = countBy(coversO2)
-  const pressureCounts = countBy(coversPressure)
-  const coverage = habitatCoverage(investigations, habitat)
+  const openInvestigation = useCallback((id) => {
+    setOpenStudy((cur) => ({ id, n: (cur?.n ?? 0) + 1 }))
+    setTab('catalogue')
+  }, [])
 
-  const props = { investigations, habitats, habitat, meta: data.meta }
+  // Ctrl+K / Cmd+K opens the command palette from anywhere.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen((o) => !o)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  useEffect(() => {
+    document.title = `${section.label} | Fire Safety Explorer`
+  }, [section])
+
+  const props = useMemo(
+    () => ({ investigations, habitats, habitat, meta: data.meta }),
+    [investigations, habitats, habitat],
+  )
 
   if (habitats.length === 0) {
     return (
-      <div className="mx-auto max-w-6xl p-4">
-        <h1 className="text-2xl font-bold">Fire Safety Explorer</h1>
-        <p className="mt-2 text-sm text-slate-700">No habitats found in the data file, so there is nothing to show yet.</p>
-      </div>
+      <main className="mx-auto max-w-xl p-6">
+        <EmptyState icon={TriangleAlert} title="No habitats in the data file">
+          data/investigations.json has no habitats, so there is nothing to compare yet.
+        </EmptyState>
+      </main>
     )
   }
 
+  const panels = {
+    explore: (
+      <Explore
+        {...props}
+        incidents={data.incidents ?? []}
+        future={data.future ?? []}
+        onOpenInvestigation={openInvestigation}
+        onNavigate={setTab}
+      />
+    ),
+    catalogue: <Catalogue {...props} openId={openStudy} />,
+    gapmap: <GapMap {...props} />,
+    rank: <ScoreTable {...props} />,
+    simulator: <FlameSimulator {...props} />,
+    ask: <AskPanel {...props} />,
+  }
+
   return (
-    <div className="jarvis mx-auto max-w-6xl p-4">
-      <header className="jv-header">
-        <div className="jv-brand">
-          <span className="jv-flame" aria-hidden="true" />
-          <div>
-            <h1 className="jv-wordmark">JARVIS</h1>
-            <p className="jv-sub">
-              <strong>Fire Safety Explorer</strong> · what microgravity combustion research tells us about fire in crewed habitats
-            </p>
-          </div>
-        </div>
-        <div className="jv-status" aria-label="Dataset status">
-          <span className="jv-chip"><span className="jv-dot" />{investigations.length} investigations</span>
-          <span className="jv-chip"><span className="jv-dot ember" />{habitats.length} habitats</span>
-        </div>
-      </header>
-
-      <div className="mb-4">
-        <span className="jv-label" id="habitat-label">Choose a crew habitat</span>
-        <div className="jv-habitats" role="radiogroup" aria-labelledby="habitat-label">
-          {habitats.map((h) => {
-            const on = h.id === habitatId
-            return (
-              <button
-                key={h.id}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                className={`jv-habitat${on ? ' on' : ''}`}
-                onClick={() => setHabitatId(h.id)}
-              >
-                <HabitatIcon id={h.id} />
-                <span className="jv-habitat-name">{h.name}</span>
-                <span className="jv-habitat-read">{habitatReadout(h)}</span>
-              </button>
-            )
-          })}
-        </div>
-        {habitat && <p className="jv-habitat-note"><b>{habitatText(habitat)}.</b> {habitat.note}</p>}
-      </div>
-
-      <nav aria-label="Sections" className="jv-tabs mb-5">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            aria-current={tab === t ? 'page' : undefined}
-            className="jv-tab"
+    <MotionConfig reducedMotion="user">
+      <LazyMotion features={domAnimation} strict>
+        <TooltipProvider delayDuration={250}>
+          <a
+            href="#main"
+            className="sr-only z-50 rounded-pill bg-lime px-4 py-2 font-semibold text-ink focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
           >
-            {t}
-          </button>
-        ))}
-      </nav>
-
-      <main>
-        {tab === 'Explore' && (
-          <div className="space-y-4">
-            <section className="jv-hero" aria-label="Mission briefing">
-              <div className="jv-hero-text">
-                <span className="jv-label">Mission briefing · {habitat?.name}</span>
-                <p className="jv-hero-num">
-                  <span className={coverage.reached.length === 0 ? 'zero' : ''}>{coverage.reached.length}</span>
-                  <span className="of"> / {coverage.total}</span>
-                </p>
-                <p className="jv-hero-lead">
-                  {coverage.reached.length === 0
-                    ? <>No investigation in our data tested oxygen and pressure that reach <b>{habitat?.name}</b> conditions ({habitatReadout(habitat)}).</>
-                    : <>investigations tested oxygen and pressure that reach <b>{habitat?.name}</b> conditions ({habitatReadout(habitat)}){': '}
-                        {coverage.reached.map((i) => i.id).join(', ')}.</>}
-                </p>
-                <p className="jv-hero-sub">
-                  {coverage.total - coverage.known.length} of {coverage.total} have no full oxygen and pressure record.
-                  There is no partial-gravity data in PSI yet.
-                </p>
-                <button type="button" className="jv-hero-btn" onClick={() => setTab('Gap map')}>
-                  Open the gap map →
-                </button>
-              </div>
-              <button type="button" className="jv-hero-map" onClick={() => setTab('Gap map')} aria-label="Open the full gap map">
-                <MiniGapMap investigations={investigations} habitat={habitat} />
-                <span className="jv-hero-map-cap">O2 % vs pressure (psi) · cyan = tested · ember = {habitat?.name}</span>
-              </button>
-            </section>
-            <section className="rounded border border-slate-300 bg-white p-4">
-              <h2 className="text-lg font-semibold">{habitat?.name}</h2>
-              <div className="jv-stats">
-                <div className="jv-stat">
-                  <div className="jv-stat-num">{investigations.length}</div>
-                  <div className="jv-stat-label">investigations in the dataset</div>
-                </div>
-                <div className="jv-stat">
-                  <div className="jv-stat-num cyan">{o2Counts.yes}</div>
-                  <div className="jv-stat-label">tested at this oxygen level</div>
-                </div>
-                <div className="jv-stat">
-                  <div className="jv-stat-num cyan">{pressureCounts.yes}</div>
-                  <div className="jv-stat-label">tested at this pressure</div>
-                </div>
-                <div className="jv-stat">
-                  <div className="jv-stat-num ember">{o2Counts.unknown}</div>
-                  <div className="jv-stat-label">oxygen range not stated</div>
-                </div>
-              </div>
-              <p className="mt-3 text-sm">
-                Oxygen: of {investigations.length} investigations, {o2Counts.yes} tested a range that includes this
-                oxygen level, {o2Counts.no} did not, and for {o2Counts.unknown} the range is not fully stated.
-              </p>
-              <p className="mt-2 text-sm">
-                Pressure: {pressureCounts.yes} tested a range that includes this pressure, {pressureCounts.no} did not,
-                and for {pressureCounts.unknown} the range is not fully stated.
-              </p>
-              <p className="mt-2 text-sm text-slate-700">
-                Oxygen and pressure are checked separately, so this does not prove a study tested both together.
-              </p>
-            </section>
-            <section className="rounded border border-slate-300 bg-white p-4">
-              <h2 className="text-lg font-semibold">Why it matters: past incidents</h2>
-              <ul className="mt-2 space-y-3 text-sm">
-                {(data.incidents ?? []).map((inc) => (
-                  <li key={inc.id}>
-                    <p className="font-medium">{inc.name} ({inc.date})</p>
-                    <p>{inc.summary}</p>
-                    {inc.linked?.length > 0 && (
-                      <p className="text-slate-700">
-                        Related research: {inc.linked.map((id) => nameOf[id] ?? id).join(', ')}
-                      </p>
-                    )}
-                  </li>
+            Skip to content
+          </a>
+          <Tabs value={tab} onValueChange={setTab} orientation={isDesktop ? 'vertical' : 'horizontal'} activationMode="manual">
+            <Rail orientation={isDesktop ? 'vertical' : 'horizontal'} />
+            <div className="min-h-dvh pb-[calc(var(--spacing-bar)+1rem)] md:pb-0 md:pl-rail">
+              <TopBar
+                section={section}
+                habitats={habitats}
+                habitat={habitat}
+                onHabitat={setHabitatId}
+                onSearch={() => setPaletteOpen(true)}
+                onAsk={() => setTab('ask')}
+                meta={data.meta}
+                count={investigations.length}
+              />
+              <main id="main" tabIndex={-1} className="mx-auto max-w-[1400px] px-4 py-6 outline-none sm:px-6 lg:px-8">
+                <p className="no-print mb-5 max-w-2xl text-sm text-muted">{section.blurb}</p>
+                {SECTIONS.map((s) => (
+                  <TabsContent key={s.id} value={s.id} className="outline-none" tabIndex={-1}>
+                    <m.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, ease: [0.2, 0.8, 0.2, 1] }}
+                    >
+                      <Suspense fallback={<TabSkeleton label={`Loading ${s.label}`} />}>{panels[s.id]}</Suspense>
+                    </m.div>
+                  </TabsContent>
                 ))}
-              </ul>
-            </section>
-          </div>
-        )}
-        {tab === 'Catalogue' && <Catalogue {...props} />}
-        {tab === 'Gap map' && <GapMap {...props} />}
-        {tab === 'Rank' && <ScoreTable {...props} />}
-        {tab === 'Simulator' && <FlameSimulator {...props} />}
-        {tab === 'Ask' && <AskPanel {...props} />}
-      </main>
-
-      <footer className="jv-footer">
-        Built with AI assistance (Claude). Data compiled from public NASA sources with AI help and reviewed by the team;
-        unstated values are shown as unknown.
-      </footer>
-    </div>
+              </main>
+              <footer className="mx-auto max-w-[1400px] px-4 pb-8 sm:px-6 lg:px-8">
+                <Card tone="flat" pad="md" as="div" className="text-xs leading-relaxed text-muted">
+                  <p>
+                    <strong className="text-ink">Use of AI.</strong> Built with AI assistance (Claude by Anthropic) for code and
+                    for drafting data records; Ask answers are AI generated from the project data. Unstated values are shown as
+                    unknown, never guessed.
+                  </p>
+                  <p className="mt-1">Data from public NASA PSI records and fact sheets. Not endorsed by NASA.</p>
+                </Card>
+              </footer>
+            </div>
+          </Tabs>
+          <CommandPalette
+            open={paletteOpen}
+            onOpenChange={setPaletteOpen}
+            habitats={habitats}
+            investigations={investigations}
+            onSection={setTab}
+            onHabitat={setHabitatId}
+            onStudy={openInvestigation}
+          />
+        </TooltipProvider>
+      </LazyMotion>
+    </MotionConfig>
   )
 }
