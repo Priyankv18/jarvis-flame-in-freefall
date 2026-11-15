@@ -1,4 +1,5 @@
-// OWNER: Priyank (scoring and visuals).
+// OWNER: Priyank (scoring and visuals). Restyled for the light mission-control theme;
+// the range maths, grouping and label placement below are unchanged.
 // Gap map: the range of conditions each investigation actually tested (a box from min to max)
 // drawn against where crews will live (habitat zones, Moon Base highlighted).
 // Empty space inside a zone = research gap. Unknown values are never guessed:
@@ -6,9 +7,9 @@
 // Tests with identical ranges are drawn once and labelled together, and labels are stacked
 // so they never overlap. The pressure view defaults to the crew range (0 to 16 psi); boxes that
 // go higher are marked with an arrow, and "Full range" shows everything.
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { getRange, habitatZone } from '../lib/scoring.js';
-import './viz.css';
+import { Card, Chip, cn } from '../ui/index.js';
 
 const W = 760;
 const H = 440;
@@ -18,19 +19,18 @@ const PH = H - M.t - M.b;
 const MIN_BOX = 8; // px, so single-value tests are still visible
 const CREW_MAX_PSI = 16; // just above ISS cabin pressure (14.7 psi)
 
-const PILLAR_COLORS = {
-  prevention: '#a78bfa',
-  detection: '#facc15',
-  suppression: '#22d3ee',
+// Colours are design tokens from index.css. Each pillar also has a letter so colour is never the only cue.
+const PILLARS = {
+  prevention: { color: 'var(--color-prevention)', letter: 'P' },
+  detection: { color: 'var(--color-detection)', letter: 'D' },
+  suppression: { color: 'var(--color-suppression)', letter: 'S' },
 };
-const OTHER_COLOR = '#8ea2bd';
-const ZONE_COLOR = '#ff7a2f'; // ember: the high-oxygen danger zone
-const ZONE_TEXT = '#ffb347';
-const OTHER_ZONE = '#38bdf8';
-const TEXT = '#e6edf7';
-const MUTED = '#8ea2bd';
-const GRID = 'rgba(56,189,248,0.10)';
+const OTHER_COLOR = 'var(--color-unknown)';
+const INK = 'var(--color-ink)';
+const MUTED = 'var(--color-muted)';
+const GRID = 'var(--color-line)';
 const MOON_IDS = ['moon-base', 'moon_base'];
+const mono = { fontFamily: 'var(--font-mono)', fontSize: 11, fill: MUTED };
 
 const pillarOf = (inv) => {
   const raw = inv.pillars ?? inv.safety_pillar;
@@ -41,7 +41,7 @@ const pillarList = (inv) => {
   const raw = inv.pillars ?? inv.safety_pillar;
   return (Array.isArray(raw) ? raw.join(', ') : raw) || 'pillar not set';
 };
-const colorOf = (inv) => PILLAR_COLORS[pillarOf(inv)] ?? OTHER_COLOR;
+const colorOf = (inv) => PILLARS[pillarOf(inv)]?.color ?? OTHER_COLOR;
 
 const fmt = (r, unit) => {
   if (!r) return 'unknown';
@@ -92,12 +92,45 @@ function makePlacer() {
   };
 }
 
+// Pill-shaped toggle group with aria-pressed buttons.
+function Toggle({ label, options, value, onChange }) {
+  return (
+    <div role="group" aria-label={label} className="inline-flex flex-wrap gap-1 rounded-pill border border-line bg-surface p-1">
+      {options.map(([v, text]) => (
+        <button
+          key={String(v)}
+          type="button"
+          aria-pressed={value === v}
+          onClick={() => onChange(v)}
+          className={cn(
+            'h-8 cursor-pointer rounded-pill px-3.5 text-sm font-medium transition-colors',
+            value === v ? 'bg-navy font-semibold text-white' : 'text-muted hover:text-ink',
+          )}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Check({ checked, onChange, children }) {
+  return (
+    <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
+      <input type="checkbox" className="size-4 cursor-pointer accent-cobalt" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {children}
+    </label>
+  );
+}
+
 export default function GapMap({ investigations, habitats, habitat }) {
+  const uid = useId().replace(/:/g, '');
   const [yAxis, setYAxis] = useState('pressure');
   const [crewZoom, setCrewZoom] = useState(true);
   const [showPartial, setShowPartial] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [selectedKey, setSelectedKey] = useState(null);
+  const [hoverKey, setHoverKey] = useState(null);
 
   const rows = useMemo(
     () => investigations.map((inv) => ({ inv, x: getRange(inv, 'o2'), y: getRange(inv, yAxis) })),
@@ -215,188 +248,251 @@ export default function GapMap({ investigations, habitats, habitat }) {
     : [];
 
   const selected = groups.find((g) => g.key === selectedKey);
+  const hovered = groups.find((g) => g.key === (hoverKey ?? selectedKey));
   const select = (key) => setSelectedKey((cur) => (cur === key ? null : key));
 
   return (
-    <section className="viz">
-      <h2>Gap map: tested conditions vs crew environments</h2>
-      <p className="viz-intro">
-        Each box spans the oxygen and {isPressure ? 'pressure' : 'flow'} range an investigation
-        actually tested. Shaded zones are where crews will live. Empty space inside a zone is a
-        research gap. There is no partial-gravity data in PSI yet, so every box here is microgravity.
-      </p>
-
-      {isPressure && moonZone && (
-        <p className="gap-headline">
-          {full.length === 0
-            ? 'No investigation in the dataset has both oxygen and pressure recorded yet, so the Moon Base zone is empty by default.'
-            : <>
-                <strong>{inMoon.length} of {full.length}</strong> investigations with known oxygen and
-                pressure reach the Moon Base zone (30% O2 or more at 10.2 psi or less)
-                {inMoon.length > 0 && <>: {inMoon.map((r) => r.inv.id).join(', ')}</>}.
-                {' '}{investigations.length - full.length} of {investigations.length} have no full record yet.
-              </>}
-        </p>
-      )}
-
-      <div className="gap-controls">
-        <span>Vertical axis</span>
-        <div className="segmented" role="group" aria-label="Vertical axis">
-          <button type="button" className={isPressure ? 'on' : ''} aria-pressed={isPressure} onClick={() => setYAxis('pressure')}>Pressure</button>
-          <button type="button" className={!isPressure ? 'on' : ''} aria-pressed={!isPressure} onClick={() => setYAxis('flow')}>Flow speed</button>
-        </div>
-        {isPressure && (
-          <div className="segmented" role="group" aria-label="Pressure range">
-            <button type="button" className={crewZoom ? 'on' : ''} aria-pressed={crewZoom} onClick={() => setCrewZoom(true)}>Crew range (0 to 16 psi)</button>
-            <button type="button" className={!crewZoom ? 'on' : ''} aria-pressed={!crewZoom} onClick={() => setCrewZoom(false)}>Full range</button>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
+      <Card>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-2xl">
+            <p className="eyebrow">Tested conditions vs crew environments</p>
+            <h2 className="mt-1 font-display text-2xl font-semibold">Gap map</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              Each box spans the oxygen and {isPressure ? 'pressure' : 'flow'} range an investigation actually tested.
+              Shaded bands are where crews will live; empty space inside a band is a research gap. There is no
+              partial-gravity data in PSI yet, so every box here is microgravity.
+            </p>
           </div>
-        )}
-        <label><input type="checkbox" checked={showPartial} onChange={(e) => setShowPartial(e.target.checked)} /> Show half-known tests</label>
-        <label><input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} /> Labels</label>
-      </div>
-
-      <p className="gap-swipe muted">Swipe sideways to see the whole chart.</p>
-      <div className="gap-scroll">
-      <svg className="gap-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Gap map of tested oxygen and pressure ranges against crew habitat zones">
-        <defs>
-          <pattern id="moon-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="8" height="8" fill={ZONE_COLOR} fillOpacity="0.10" />
-            <line x1="0" y1="0" x2="0" y2="8" stroke={ZONE_COLOR} strokeOpacity="0.35" strokeWidth="2" />
-          </pattern>
-          <clipPath id="plot-clip"><rect x={M.l} y={M.t} width={PW} height={PH} /></clipPath>
-        </defs>
-
-        {/* grid + axes */}
-        <rect x={M.l} y={M.t} width={PW} height={PH} fill="rgba(5,8,15,0.55)" stroke="rgba(56,189,248,0.25)" />
-        {xTicks.map((t) => (
-          <g key={`x${t}`}>
-            <line x1={sx(t)} x2={sx(t)} y1={M.t} y2={M.t + PH} stroke={GRID} />
-            <text x={sx(t)} y={M.t + PH + 18} textAnchor="middle">{t}</text>
-          </g>
-        ))}
-        {yTicks.map((t) => (
-          <g key={`y${t}`}>
-            <line x1={M.l} x2={M.l + PW} y1={sy(t)} y2={sy(t)} stroke={GRID} />
-            <text x={M.l - 8} y={sy(t) + 4} textAnchor="end">{t}</text>
-          </g>
-        ))}
-        <text className="axis-title" x={M.l + PW / 2} y={H - 8} textAnchor="middle">Oxygen (% by volume)</text>
-        <text className="axis-title" transform={`translate(16 ${M.t + PH / 2}) rotate(-90)`} textAnchor="middle">{yLabel}</text>
-
-        <g clipPath="url(#plot-clip)">
-          {/* habitat zones */}
-          {zones.filter((z) => !z.isPoint).map((z) => (
-            <rect
-              key={z.label}
-              {...boxRect(z.o2, z.pressure)}
-              fill={z.isMoon ? 'url(#moon-hatch)' : 'rgba(56,189,248,0.07)'}
-              stroke={z.isMoon ? ZONE_COLOR : OTHER_ZONE}
-              strokeWidth={z.isSelected ? 2.5 : 1.5}
-            />
-          ))}
-
-          {/* investigation boxes (one shape per group of identical ranges) */}
-          {groups.map((g) => {
-            const c = colorOf(g.rows[0].inv);
-            const on = g.key === selectedKey;
-            const over = isPressure && g.y && g.y.max > yMax;
-            const ids = g.rows.map((r) => r.inv.id).join(', ');
-            return (
-              <g
-                key={g.key}
-                className="box"
-                tabIndex={0}
-                onClick={() => select(g.key)}
-                onMouseEnter={() => setSelectedKey(g.key)}
-                onFocus={() => setSelectedKey(g.key)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') select(g.key); }}
-              >
-                <title>{`${ids}: O2 ${fmt(g.x, '%')}, ${yAxis} ${fmt(g.y, yUnit)}`}</title>
-                <rect
-                  {...g.rect}
-                  rx={2}
-                  fill={c}
-                  fillOpacity={g.isFull ? (on ? 0.35 : 0.18) : (on ? 0.14 : 0.04)}
-                  stroke={c}
-                  strokeWidth={on ? 2.5 : 1.5}
-                  strokeDasharray={g.isFull ? undefined : '5 4'}
-                />
-                {over && (
-                  <path
-                    d={`M${g.rect.x + g.rect.width / 2 - 6} ${M.t + 10} L${g.rect.x + g.rect.width / 2} ${M.t + 2} L${g.rect.x + g.rect.width / 2 + 6} ${M.t + 10} Z`}
-                    fill={c}
-                  />
-                )}
-              </g>
-            );
-          })}
-        </g>
-
-        {/* labels drawn last so they stay readable */}
-        {labelled.map((l) => (
-          <text key={`l-${l.key}`} className="box-label" x={l.x} y={l.y}>{l.text}</text>
-        ))}
-        {zoneLabels.map(({ z, r, cx, cy, x, y }) => (z.isPoint ? (
-          <g key={z.label}>
-            <path
-              d={`M${cx} ${cy - 8} L${cx + 8} ${cy} L${cx} ${cy + 8} L${cx - 8} ${cy} Z`}
-              fill="#0c1424"
-              stroke={z.isSelected ? ZONE_COLOR : TEXT}
-              strokeWidth={z.isSelected ? 2.5 : 1.5}
-            />
-            <text className="zone-label" x={x} y={y} style={{ fill: TEXT }}>{z.label}</text>
-          </g>
-        ) : (
-          <g key={`${z.label}-label`}>
-            <text className="zone-label" x={r.x + 8} y={r.y + 18} style={{ fill: z.isMoon ? ZONE_TEXT : OTHER_ZONE }}>
-              {z.label}
-            </text>
-            <text x={r.x + 8} y={r.y + 34} style={{ fill: z.isMoon ? ZONE_TEXT : OTHER_ZONE, fontSize: 11 }}>
-              {z.openO2 ? `≥${z.o2.min}% O2` : `${z.o2.min} to ${z.o2.max}% O2`}
-              {', '}
-              {z.openPressureBelow ? `≤${z.pressure.max} psi` : `${z.pressure.min} to ${z.pressure.max} psi`}
-            </text>
-          </g>
-        )))}
-      </svg>
-      </div>
-
-      <div className="gap-legend">
-        {Object.entries(PILLAR_COLORS).map(([k, c]) => (
-          <span key={k}><i className="swatch" style={{ background: c }} />{k}</span>
-        ))}
-        <span><i className="swatch dashed" />one axis unknown (spans whole axis)</span>
-        {isPressure && <span><i className="swatch zone" />Moon / rover / Mars zone</span>}
-        {isPressure && <span><i className="swatch diamond" />crew environment (single value)</span>}
-        {hiddenAbove && <span>▲ continues above 16 psi</span>}
-      </div>
-
-      <div className="gap-detail" aria-live="polite">
-        {selected ? (
-          selected.rows.map(({ inv, x, y }) => (
-            <div key={inv.id} className="gap-detail-row">
-              <strong>{inv.id}</strong>{inv.name ? `: ${inv.name}` : ''}
-              <div className="muted">
-                O2 {fmt(x, '%')} · {isPressure ? 'Pressure' : 'Flow'} {fmt(y, yUnit)}
-                {' · '}{inv.fuel_state ?? 'fuel unknown'}{' · '}{pillarList(inv)}
-                {inv.hardware ? ` · ${inv.hardware}` : ''}
-              </div>
+          {isPressure && moonZone && (
+            <div className="rounded-2xl bg-navy px-5 py-4 text-white">
+              <p className="eyebrow text-white/80">Reach the Moon Base zone</p>
+              {full.length === 0 ? (
+                <p className="mt-1 max-w-xs text-sm">No investigation has both oxygen and pressure recorded yet.</p>
+              ) : (
+                <p className="mt-1 flex items-baseline gap-2">
+                  <span className="display text-5xl text-lime">{inMoon.length}</span>
+                  <span className="text-sm text-white/85">
+                    of {full.length} with known O2 and pressure
+                  </span>
+                </p>
+              )}
+              <p className="num mt-1 text-xs text-white/80">30% O2 or more at 10.2 psi or less</p>
             </div>
-          ))
-        ) : (
-          <span className="muted">Hover or tap a box to see what was tested.</span>
-        )}
-      </div>
+          )}
+        </div>
 
-      {!isPressure && (
-        <p className="muted gap-unknown">
-          Habitat zones are not shown on the flow view: the dataset has no cabin flow speeds for the crew environments.
-        </p>
-      )}
-      <p className="muted gap-unknown">
-        Not plotted (oxygen and {yAxis} both unknown): {none.map((r) => r.inv.id).join(', ') || 'none'}
-        {!showPartial && partial.length > 0 && <><br />Hidden half-known tests: {partial.map((r) => r.inv.id).join(', ')}</>}
-      </p>
-    </section>
+        {isPressure && moonZone && full.length > 0 && (
+          <p className="mt-4 text-sm">
+            {inMoon.length > 0 ? <>Inside the zone: <span className="num font-semibold">{inMoon.map((r) => r.inv.id).join(', ')}</span>. </> : 'Nothing reaches the zone yet. '}
+            <span className="text-muted">{investigations.length - full.length} of {investigations.length} have no full record yet.</span>
+          </p>
+        )}
+
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+          <Toggle label="Vertical axis" value={yAxis} onChange={setYAxis} options={[['pressure', 'Pressure'], ['flow', 'Flow speed']]} />
+          {isPressure && (
+            <Toggle label="Pressure range" value={crewZoom} onChange={setCrewZoom} options={[[true, 'Crew range (0 to 16 psi)'], [false, 'Full range']]} />
+          )}
+          <span className="flex flex-wrap gap-4 sm:ml-auto">
+            <Check checked={showPartial} onChange={setShowPartial}>Show half-known tests</Check>
+            <Check checked={showLabels} onChange={setShowLabels}>Labels</Check>
+          </span>
+        </div>
+
+        <p className="mt-4 text-xs text-muted sm:hidden">Swipe sideways to see the whole chart.</p>
+        <div className="scroll-thin mt-3 overflow-x-auto">
+          <div className="relative mx-auto max-w-[980px] min-w-[640px]">
+            <svg className="h-auto w-full" viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby={`${uid}-desc`}>
+              <desc id={`${uid}-desc`}>
+                Gap map of tested oxygen and {yAxis} ranges against crew habitat zones. {full.length} investigations have both
+                values, {partial.length} have one, {none.length} have neither.
+              </desc>
+              <defs>
+                <pattern id={`${uid}-moon`} width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                  <rect width="8" height="8" style={{ fill: 'var(--color-lime)' }} fillOpacity="0.45" />
+                  <line x1="0" y1="0" x2="0" y2="8" style={{ stroke: INK }} strokeOpacity="0.25" strokeWidth="2" />
+                </pattern>
+                <clipPath id={`${uid}-clip`}><rect x={M.l} y={M.t} width={PW} height={PH} /></clipPath>
+              </defs>
+
+              {/* grid + axes */}
+              <rect x={M.l} y={M.t} width={PW} height={PH} rx="8" style={{ fill: 'var(--color-surface)', stroke: GRID }} />
+              {xTicks.map((t) => (
+                <g key={`x${t}`}>
+                  <line x1={sx(t)} x2={sx(t)} y1={M.t} y2={M.t + PH} style={{ stroke: GRID }} />
+                  <text x={sx(t)} y={M.t + PH + 18} textAnchor="middle" style={mono}>{t}</text>
+                </g>
+              ))}
+              {yTicks.map((t) => (
+                <g key={`y${t}`}>
+                  <line x1={M.l} x2={M.l + PW} y1={sy(t)} y2={sy(t)} style={{ stroke: GRID }} />
+                  <text x={M.l - 8} y={sy(t) + 4} textAnchor="end" style={mono}>{t}</text>
+                </g>
+              ))}
+              <text x={M.l + PW / 2} y={H - 8} textAnchor="middle" style={{ ...mono, fill: INK, fontWeight: 600 }}>Oxygen (% by volume)</text>
+              <text transform={`translate(16 ${M.t + PH / 2}) rotate(-90)`} textAnchor="middle" style={{ ...mono, fill: INK, fontWeight: 600 }}>{yLabel}</text>
+
+              <g clipPath={`url(#${uid}-clip)`}>
+                {/* habitat zones as labelled translucent bands */}
+                {zones.filter((z) => !z.isPoint).map((z) => (
+                  <rect
+                    key={z.label}
+                    {...boxRect(z.o2, z.pressure)}
+                    fill={z.isMoon ? `url(#${uid}-moon)` : undefined}
+                    fillOpacity={z.isMoon ? 1 : 0.08}
+                    strokeDasharray="6 4"
+                    strokeWidth={z.isSelected ? 2.5 : 1.5}
+                    style={{ stroke: INK, ...(z.isMoon ? {} : { fill: 'var(--color-cobalt)' }) }}
+                  />
+                ))}
+
+                {/* investigation boxes (one shape per group of identical ranges) */}
+                {groups.map((g) => {
+                  const c = colorOf(g.rows[0].inv);
+                  const on = g.key === selectedKey || g.key === hoverKey;
+                  const over = isPressure && g.y && g.y.max > yMax;
+                  const ids = g.rows.map((r) => r.inv.id).join(', ');
+                  return (
+                    <g
+                      key={g.key}
+                      className="cursor-pointer outline-none [&:focus-visible>rect]:stroke-[3.5]"
+                      tabIndex={0}
+                      role="button"
+                      aria-pressed={g.key === selectedKey}
+                      aria-label={`${ids}: oxygen ${fmt(g.x, '%')}, ${yAxis} ${fmt(g.y, yUnit)}`}
+                      onClick={() => select(g.key)}
+                      onMouseEnter={() => setHoverKey(g.key)}
+                      onMouseLeave={() => setHoverKey(null)}
+                      onFocus={() => setHoverKey(g.key)}
+                      onBlur={() => setHoverKey(null)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(g.key); } }}
+                    >
+                      <rect
+                        {...g.rect}
+                        rx={3}
+                        fillOpacity={g.isFull ? (on ? 0.3 : 0.1) : (on ? 0.12 : 0.03)}
+                        strokeWidth={on ? 2.5 : 1.5}
+                        strokeDasharray={g.isFull ? undefined : '5 4'}
+                        style={{ fill: c, stroke: c }}
+                      />
+                      {over && (
+                        <path
+                          d={`M${g.rect.x + g.rect.width / 2 - 6} ${M.t + 10} L${g.rect.x + g.rect.width / 2} ${M.t + 2} L${g.rect.x + g.rect.width / 2 + 6} ${M.t + 10} Z`}
+                          style={{ fill: c }}
+                        />
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
+
+              {/* labels drawn last so they stay readable */}
+              {labelled.map((l) => (
+                <text key={`l-${l.key}`} x={l.x} y={l.y} pointerEvents="none" paintOrder="stroke" strokeWidth="2.5" strokeLinejoin="round" style={{ fontSize: 11, fill: INK, stroke: 'var(--color-surface)', fontWeight: 600 }}>
+                  {l.text}
+                </text>
+              ))}
+              {zoneLabels.map(({ z, r, cx, cy, x, y }) => (z.isPoint ? (
+                <g key={z.label} pointerEvents="none">
+                  <path
+                    d={`M${cx} ${cy - 8} L${cx + 8} ${cy} L${cx} ${cy + 8} L${cx - 8} ${cy} Z`}
+                    strokeWidth={z.isSelected ? 2.5 : 1.5}
+                    style={{ fill: z.isSelected ? 'var(--color-lime)' : 'var(--color-card)', stroke: INK }}
+                  />
+                  <text x={x} y={y} paintOrder="stroke" strokeWidth="2.5" strokeLinejoin="round" style={{ fontSize: 12, fontWeight: 600, fill: INK, stroke: 'var(--color-surface)' }}>{z.label}</text>
+                </g>
+              ) : (
+                <g key={`${z.label}-label`} pointerEvents="none">
+                  <text x={r.x + 8} y={r.y + 18} style={{ fontSize: 12, fontWeight: 700, fill: INK }}>{z.label}</text>
+                  <text x={r.x + 8} y={r.y + 34} style={{ fontSize: 11, fill: INK }}>
+                    {z.openO2 ? `≥${z.o2.min}% O2` : `${z.o2.min} to ${z.o2.max}% O2`}
+                    {', '}
+                    {z.openPressureBelow ? `≤${z.pressure.max} psi` : `${z.pressure.min} to ${z.pressure.max} psi`}
+                  </text>
+                </g>
+              )))}
+            </svg>
+
+            {/* Hover / focus tooltip, positioned over the box in viewBox percentages. */}
+            {hovered && (
+              <div
+                role="tooltip"
+                className="pointer-events-none absolute z-10 w-64 -translate-x-1/2 -translate-y-full rounded-xl bg-ink px-3 py-2 text-xs text-white shadow-lift"
+                style={{
+                  left: `${Math.min(85, Math.max(15, ((hovered.rect.x + hovered.rect.width / 2) / W) * 100))}%`,
+                  top: `calc(${(Math.max(hovered.rect.y, M.t + 40) / H) * 100}% - 6px)`,
+                }}
+              >
+                {hovered.rows.slice(0, 4).map(({ inv, x, y }) => (
+                  <div key={inv.id} className="py-0.5">
+                    <p className="font-semibold"><span className="num">{inv.id}</span> {inv.name}</p>
+                    <p className="num text-white/80">O2 {fmt(x, '%')} · {isPressure ? 'P' : 'Flow'} {fmt(y, yUnit)}</p>
+                  </div>
+                ))}
+                {hovered.rows.length > 4 && <p className="text-white/80">+{hovered.rows.length - 4} more</p>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
+          {Object.entries(PILLARS).map(([k, p]) => (
+            <li key={k} className="flex items-center gap-2">
+              <span aria-hidden="true" className="num flex size-4 items-center justify-center rounded text-[9px] font-bold text-white" style={{ background: p.color }}>{p.letter}</span>
+              {k}
+            </li>
+          ))}
+          <li className="flex items-center gap-2"><span aria-hidden="true" className="h-3 w-5 rounded border-[1.5px] border-dashed border-ink" />one axis unknown (spans the whole axis)</li>
+          {isPressure && <li className="flex items-center gap-2"><span aria-hidden="true" className="h-3 w-5 rounded border-[1.5px] border-dashed border-ink bg-lime/60" />Moon / rover / Mars zone</li>}
+          {isPressure && <li className="flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rotate-45 border-[1.5px] border-ink bg-card" />crew environment (single value)</li>}
+          {hiddenAbove && <li>▲ continues above 16 psi</li>}
+        </ul>
+      </Card>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <Card aria-live="polite">
+          <p className="eyebrow">Selected</p>
+          {selected ? (
+            <ul className="mt-2 grid gap-3">
+              {selected.rows.map(({ inv, x, y }) => (
+                <li key={inv.id} className="rounded-2xl bg-surface p-3">
+                  <p className="font-semibold"><span className="num mr-2 text-cobalt">{inv.id}</span>{inv.name}</p>
+                  <p className="num mt-1 text-xs text-muted">
+                    O2 {fmt(x, '%')} · {isPressure ? 'Pressure' : 'Flow'} {fmt(y, yUnit)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Chip size="sm">{inv.fuel_state ?? 'fuel unknown'}</Chip>
+                    <Chip size="sm">{pillarList(inv)}</Chip>
+                    {inv.hardware && <Chip size="sm" tone="outline">{inv.hardware}</Chip>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-muted">Hover, focus or tap a box to see what was tested. Click or press Enter to pin it here.</p>
+          )}
+        </Card>
+        <Card>
+          <p className="eyebrow">Not plotted: oxygen and {yAxis} both unknown</p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {none.length ? none.map((r) => <Chip key={r.inv.id} tone="unknown" size="sm" className="num">{r.inv.id}</Chip>) : <span className="text-sm text-muted">none</span>}
+          </div>
+          {!showPartial && partial.length > 0 && (
+            <>
+              <p className="eyebrow mt-4">Hidden half-known tests</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {partial.map((r) => <Chip key={r.inv.id} size="sm" tone="outline" className="num">{r.inv.id}</Chip>)}
+              </div>
+            </>
+          )}
+          {!isPressure && (
+            <p className="mt-4 text-xs text-muted">
+              Habitat zones are not shown on the flow view: the dataset has no cabin flow speeds for the crew environments.
+            </p>
+          )}
+        </Card>
+      </div>
+    </div>
   );
 }

@@ -1,12 +1,13 @@
-// OWNER: Priyank (scoring and visuals).
+// OWNER: Priyank (scoring and visuals). Restyled for the light theme; maths unchanged.
 // Small, non-interactive preview of the gap map for the Explore page: the selected habitat's
-// zone (ember) and every investigation with known oxygen AND pressure (cyan boxes).
+// zone and every investigation with known oxygen AND pressure.
 // Same axes as the full gap map's crew view: 0 to 100% O2, 0 to 16 psi.
+import { useId } from 'react';
 import { getRange, habitatZone } from '../lib/scoring.js';
 
 const W = 300;
 const H = 190;
-const M = { l: 26, r: 8, t: 8, b: 22 };
+const M = { l: 28, r: 8, t: 8, b: 22 };
 const PW = W - M.l - M.r;
 const PH = H - M.t - M.b;
 const Y_MAX = 16;
@@ -24,7 +25,10 @@ function rect(x, y, min = 5) {
   return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 };
 }
 
+const tick = { fontFamily: 'var(--font-mono)', fontSize: 9, fill: 'var(--color-muted)' };
+
 export default function MiniGapMap({ investigations, habitat }) {
+  const id = useId().replace(/:/g, '');
   const zone = habitatZone(habitat);
   const boxes = investigations
     .map((inv) => ({ inv, x: getRange(inv, 'o2'), y: getRange(inv, 'pressure') }))
@@ -32,40 +36,39 @@ export default function MiniGapMap({ investigations, habitat }) {
   const isPoint = zone?.pressure && zone.o2.min === zone.o2.max && zone.pressure.min === zone.pressure.max;
 
   return (
-    <svg className="jv-mini-map" viewBox={`0 0 ${W} ${H}`} role="img"
+    <svg className="h-auto w-full" viewBox={`0 0 ${W} ${H}`} role="img"
       aria-label={`Preview: ${boxes.length} investigations with known oxygen and pressure, against the ${habitat?.name ?? 'selected'} zone`}>
       <defs>
-        <pattern id="mini-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect width="6" height="6" fill="#ff7a2f" fillOpacity="0.1" />
-          <line x1="0" y1="0" x2="0" y2="6" stroke="#ff7a2f" strokeOpacity="0.4" strokeWidth="1.5" />
+        <pattern id={`${id}-zone`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="6" height="6" style={{ fill: 'var(--color-lime)' }} fillOpacity="0.45" />
+          <line x1="0" y1="0" x2="0" y2="6" style={{ stroke: 'var(--color-ink)' }} strokeOpacity="0.35" strokeWidth="1.2" />
         </pattern>
       </defs>
-      <rect x={M.l} y={M.t} width={PW} height={PH} fill="rgba(5,8,15,0.6)" stroke="rgba(56,189,248,0.25)" />
+      <rect x={M.l} y={M.t} width={PW} height={PH} rx="6" style={{ fill: 'var(--color-surface)', stroke: 'var(--color-line)' }} />
       {[0, 25, 50, 75, 100].map((t) => (
         <g key={`x${t}`}>
-          <line x1={sx(t)} x2={sx(t)} y1={M.t} y2={M.t + PH} stroke="rgba(56,189,248,0.08)" />
-          <text x={sx(t)} y={H - 8} textAnchor="middle">{t}</text>
+          <line x1={sx(t)} x2={sx(t)} y1={M.t} y2={M.t + PH} style={{ stroke: 'var(--color-line)' }} />
+          <text x={sx(t)} y={H - 8} textAnchor="middle" style={tick}>{t}</text>
         </g>
       ))}
       {[0, 8, 16].map((t) => (
         <g key={`y${t}`}>
-          <line x1={M.l} x2={M.l + PW} y1={sy(t)} y2={sy(t)} stroke="rgba(56,189,248,0.08)" />
-          <text x={M.l - 5} y={sy(t) + 3} textAnchor="end">{t}</text>
+          <line x1={M.l} x2={M.l + PW} y1={sy(t)} y2={sy(t)} style={{ stroke: 'var(--color-line)' }} />
+          <text x={M.l - 5} y={sy(t) + 3} textAnchor="end" style={tick}>{t}</text>
         </g>
       ))}
 
       {zone?.pressure && !isPoint && (
-        <rect {...rect(zone.o2, zone.pressure)} fill="url(#mini-hatch)" stroke="#ff7a2f" strokeWidth="1.5" className="jv-mini-zone" />
+        <rect {...rect(zone.o2, zone.pressure)} fill={`url(#${id}-zone)`} strokeWidth="1.5" strokeDasharray="4 3" style={{ stroke: 'var(--color-ink)' }} />
       )}
       {boxes.map(({ inv, x, y }) => (
-        <rect key={inv.id} {...rect(x, y)} rx="1.5" fill="#22d3ee" fillOpacity="0.16" stroke="#22d3ee" strokeWidth="1.2" />
+        <rect key={inv.id} {...rect(x, y)} rx="1.5" fillOpacity="0.12" strokeWidth="1.3" style={{ fill: 'var(--color-cobalt)', stroke: 'var(--color-cobalt)' }} />
       ))}
       {isPoint && (
         <path
-          d={`M${sx(zone.o2.min)} ${sy(zone.pressure.min) - 6} l6 6 l-6 6 l-6 -6 z`}
-          fill="#ff7a2f"
-          stroke="#05080f"
-          className="jv-mini-zone"
+          d={`M${sx(zone.o2.min)} ${sy(zone.pressure.min) - 7} l7 7 l-7 7 l-7 -7 z`}
+          strokeWidth="1.5"
+          style={{ fill: 'var(--color-lime)', stroke: 'var(--color-ink)' }}
         />
       )}
     </svg>
